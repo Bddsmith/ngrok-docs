@@ -52,6 +52,75 @@ async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**status_check) for status_check in status_checks]
 
+# Helper function to serialize ObjectId
+def serialize_object_id(obj):
+    if "_id" in obj:
+        obj["id"] = str(obj["_id"])
+        del obj["_id"]
+    return obj
+
+# Admin - Get all users
+@api_router.get("/admin/users", response_model=List[dict])
+async def get_all_users():
+    cursor = db.users.find({}, {"password": 0})  # Exclude password field
+    users = await cursor.to_list(length=1000)
+    
+    # Add user statistics
+    users_with_stats = []
+    for user in users:
+        user = serialize_object_id(user)
+        
+        # Count user's listings
+        listing_count = await db.listings.count_documents({
+            "user_id": user["id"], 
+            "is_active": True
+        })
+        
+        # Count user's messages
+        message_count = await db.messages.count_documents({
+            "$or": [
+                {"sender_id": user["id"]},
+                {"receiver_id": user["id"]}
+            ]
+        })
+        
+        user["listing_count"] = listing_count
+        user["message_count"] = message_count
+        users_with_stats.append(user)
+    
+    return users_with_stats
+
+# Admin - Get user statistics
+@api_router.get("/admin/stats", response_model=dict)
+async def get_admin_stats():
+    total_users = await db.users.count_documents({})
+    active_listings = await db.listings.count_documents({"is_active": True})
+    total_messages = await db.messages.count_documents({})
+    
+    # Users registered in last 30 days
+    from datetime import timedelta
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    recent_users = await db.users.count_documents({
+        "created_at": {"$gte": thirty_days_ago}
+    })
+    
+    # Listings by category
+    poultry_count = await db.listings.count_documents({"category": "poultry", "is_active": True})
+    coop_count = await db.listings.count_documents({"category": "coop", "is_active": True})
+    cage_count = await db.listings.count_documents({"category": "cage", "is_active": True})
+    
+    return {
+        "total_users": total_users,
+        "active_listings": active_listings,
+        "total_messages": total_messages,
+        "recent_users": recent_users,
+        "listings_by_category": {
+            "poultry": poultry_count,
+            "coop": coop_count,
+            "cage": cage_count
+        }
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
