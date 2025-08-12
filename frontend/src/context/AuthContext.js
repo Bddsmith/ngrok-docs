@@ -94,11 +94,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      setToken(null);
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const value = {
