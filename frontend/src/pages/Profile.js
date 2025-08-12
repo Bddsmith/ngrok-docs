@@ -7,7 +7,6 @@ import './Profile.css';
 const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
   const [myListings, setMyListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,44 +17,36 @@ const Profile = () => {
   }, [user]);
 
   const loadMyListings = async () => {
-    if (!user) return;
-    
     try {
       setLoading(true);
       const data = await listingsAPI.getUserListings(user.id);
       setMyListings(data);
     } catch (error) {
       console.error('Error loading listings:', error);
+      setMyListings([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm('Are you sure you want to logout?')) {
-      logout();
+      await logout();
       navigate('/');
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   if (!user) {
     return (
-      <div className="profile-page">
-        <div className="container">
-          <div className="login-prompt">
-            <div className="login-prompt-icon">👤</div>
-            <h2 className="login-prompt-title">Login Required</h2>
-            <p className="login-prompt-text">Please log in to view your profile</p>
-            <button 
-              onClick={() => navigate('/login')}
-              className="btn btn-primary"
-            >
-              Log In
-            </button>
+      <div className="page-container">
+        <div className="container-sm">
+          <div className="auth-required">
+            <i className="fas fa-lock"></i>
+            <h2>Authentication Required</h2>
+            <p>You need to be logged in to view your profile.</p>
+            <Link to="/login" className="btn btn-primary">
+              Login to Continue
+            </Link>
           </div>
         </div>
       </div>
@@ -64,126 +55,121 @@ const Profile = () => {
 
   return (
     <div className="profile-page">
-      <div className="container">
-        <div className="profile-container">
+      <div className="page-container">
+        <div className="container">
           {/* Profile Header */}
           <div className="profile-header">
-            <div className="profile-avatar">
-              👤
+            <div className="profile-info">
+              <div className="profile-avatar">
+                <i className="fas fa-user"></i>
+              </div>
+              <div className="profile-details">
+                <h1 className="profile-name">{user.name}</h1>
+                <p className="profile-email">{user.email}</p>
+                <p className="profile-location">
+                  <i className="fas fa-map-marker-alt"></i>
+                  {user.location}
+                </p>
+                <p className="profile-phone">
+                  <i className="fas fa-phone"></i>
+                  {user.phone}
+                </p>
+              </div>
             </div>
             
-            <div className="profile-info">
-              <h1 className="profile-name">{user.name}</h1>
-              <p className="profile-email">{user.email}</p>
-              <div className="profile-location">
-                <span className="location-icon">📍</span>
-                <span>{user.location}</span>
-              </div>
+            <div className="profile-actions">
+              <Link to="/create-listing" className="btn btn-primary">
+                <i className="fas fa-plus"></i>
+                Create Listing
+              </Link>
+              <button onClick={handleLogout} className="btn btn-outline">
+                <i className="fas fa-sign-out-alt"></i>
+                Logout
+              </button>
             </div>
           </div>
 
           {/* Stats */}
           <div className="profile-stats">
             <div className="stat-card">
-              <div className="stat-number">{myListings.length}</div>
-              <div className="stat-label">Active Listings</div>
+              <span className="stat-number">{myListings.length}</span>
+              <span className="stat-label">Active Listings</span>
             </div>
-            
             <div className="stat-card">
-              <div className="stat-number">
-                {formatDate(user.created_at)}
-              </div>
-              <div className="stat-label">Member Since</div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="profile-actions">
-            <h2 className="section-title">Quick Actions</h2>
-            
-            <div className="action-list">
-              <Link to="/create-listing" className="action-item">
-                <div className="action-icon">➕</div>
-                <div className="action-content">
-                  <h3 className="action-title">Create New Listing</h3>
-                  <p className="action-description">List your poultry, coops, or cages</p>
-                </div>
-                <div className="action-arrow">→</div>
-              </Link>
-
-              <Link to="/messages" className="action-item">
-                <div className="action-icon">💬</div>
-                <div className="action-content">
-                  <h3 className="action-title">Messages</h3>
-                  <p className="action-description">View your conversations</p>
-                </div>
-                <div className="action-arrow">→</div>
-              </Link>
-
-              <button onClick={handleLogout} className="action-item logout-action">
-                <div className="action-icon">🚪</div>
-                <div className="action-content">
-                  <h3 className="action-title">Logout</h3>
-                  <p className="action-description">Sign out of your account</p>
-                </div>
-                <div className="action-arrow">→</div>
-              </button>
+              <span className="stat-number">
+                {user.created_at ? new Date(user.created_at).getFullYear() : 'N/A'}
+              </span>
+              <span className="stat-label">Member Since</span>
             </div>
           </div>
 
           {/* My Listings */}
-          <div className="profile-listings">
+          <div className="my-listings-section">
             <div className="section-header">
-              <h2 className="section-title">My Listings</h2>
-              <button onClick={loadMyListings} className="refresh-button">
-                🔄
-              </button>
+              <h2>My Listings</h2>
+              <Link to="/create-listing" className="btn btn-secondary">
+                <i className="fas fa-plus"></i>
+                Add New
+              </Link>
             </div>
-            
+
             {loading ? (
-              <div className="loading">
+              <div className="loading-section">
                 <div className="spinner"></div>
                 <p>Loading your listings...</p>
               </div>
-            ) : myListings.length > 0 ? (
+            ) : myListings.length === 0 ? (
+              <div className="empty-state">
+                <i className="fas fa-list"></i>
+                <h3>No listings yet</h3>
+                <p>Create your first listing to get started!</p>
+                <Link to="/create-listing" className="btn btn-primary">
+                  <i className="fas fa-plus"></i>
+                  Create Listing
+                </Link>
+              </div>
+            ) : (
               <div className="listings-grid">
                 {myListings.map((listing) => (
-                  <Link
-                    key={listing.id}
-                    to={`/listing/${listing.id}`}
-                    className="listing-card"
+                  <Link 
+                    to={`/listing/${listing.id || listing._id}`} 
+                    key={listing.id || listing._id} 
+                    className="profile-listing-card"
                   >
-                    <div className="listing-header">
-                      <span className="category-badge">
+                    <div className="listing-image">
+                      {listing.images && listing.images.length > 0 ? (
+                        <img src={listing.images[0]} alt={listing.title} />
+                      ) : (
+                        <div className="listing-placeholder">
+                          <i className="fas fa-image"></i>
+                        </div>
+                      )}
+                      <div className="listing-category">
                         {listing.category}
-                      </span>
-                      <span className="price">${listing.price}</span>
+                      </div>
                     </div>
                     
-                    <h3 className="listing-title">{listing.title}</h3>
-                    <p className="listing-description">
-                      {listing.description}
-                    </p>
-                    
-                    <div className="listing-footer">
-                      <span className="listing-date">
-                        Posted {formatDate(listing.created_at)}
-                      </span>
-                      <span className={`status-badge ${listing.is_active ? 'active' : 'inactive'}`}>
-                        {listing.is_active ? 'Active' : 'Inactive'}
-                      </span>
+                    <div className="listing-content">
+                      <div className="listing-header">
+                        <h3 className="listing-title">{listing.title}</h3>
+                        <span className="listing-price">${listing.price}</span>
+                      </div>
+                      
+                      <p className="listing-description">
+                        {listing.description}
+                      </p>
+                      
+                      <div className="listing-footer">
+                        <span className="listing-date">
+                          {new Date(listing.created_at).toLocaleDateString()}
+                        </span>
+                        <span className={`listing-status ${listing.is_active ? 'active' : 'inactive'}`}>
+                          {listing.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
                     </div>
                   </Link>
                 ))}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state-icon">📝</div>
-                <h3 className="empty-state-title">No Listings Yet</h3>
-                <p className="empty-state-text">Create your first listing to get started</p>
-                <Link to="/create-listing" className="btn btn-primary">
-                  Create Listing
-                </Link>
               </div>
             )}
           </div>

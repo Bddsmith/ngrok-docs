@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { listingsAPI, messagesAPI } from '../services/api';
+import { listingsAPI, userAPI } from '../services/api';
 import './ListingDetail.css';
 
 const ListingDetail = () => {
@@ -10,64 +10,41 @@ const ListingDetail = () => {
   const navigate = useNavigate();
   
   const [listing, setListing] = useState(null);
+  const [seller, setSeller] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [messageText, setMessageText] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    loadListing();
+    if (id) {
+      loadListing();
+    }
   }, [id]);
 
   const loadListing = async () => {
     try {
       setLoading(true);
-      const data = await listingsAPI.getById(id);
-      setListing(data);
+      const listingData = await listingsAPI.getById(id);
+      setListing(listingData);
+      
+      // Load seller info
+      const sellerData = await userAPI.getProfile(listingData.user_id);
+      setSeller(sellerData);
     } catch (error) {
       console.error('Error loading listing:', error);
-      setError('Failed to load listing');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    
+  const handleContactSeller = () => {
     if (!user) {
       navigate('/login');
       return;
     }
 
-    if (!messageText.trim()) {
-      return;
-    }
+    if (!listing || !seller) return;
 
-    setSendingMessage(true);
-    try {
-      await messagesAPI.send({
-        receiver_id: listing.user_id,
-        listing_id: listing.id,
-        content: messageText.trim(),
-      }, user.id);
-      
-      setMessageText('');
-      alert('Message sent successfully!');
-    } catch (error) {
-      console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-
-  const handleCallSeller = () => {
-    if (listing.phone) {
-      window.open(`tel:${listing.phone}`, '_self');
-    } else {
-      alert('Phone number not available');
-    }
+    navigate(`/chat/${listing.id || listing._id}/${seller.id || seller._id}`);
   };
 
   const formatDate = (dateString) => {
@@ -82,7 +59,7 @@ const ListingDetail = () => {
     return (
       <div className="listing-detail-page">
         <div className="container">
-          <div className="loading">
+          <div className="loading-section">
             <div className="spinner"></div>
             <p>Loading listing...</p>
           </div>
@@ -91,204 +68,233 @@ const ListingDetail = () => {
     );
   }
 
-  if (error || !listing) {
+  if (!listing || !seller) {
     return (
       <div className="listing-detail-page">
         <div className="container">
-          <div className="error-state">
-            <div className="error-icon">❌</div>
-            <h2 className="error-title">Listing Not Found</h2>
-            <p className="error-text">
-              {error || 'The listing you are looking for does not exist.'}
-            </p>
-            <button onClick={() => navigate('/browse')} className="btn btn-primary">
-              Browse Listings
-            </button>
+          <div className="error-section">
+            <i className="fas fa-exclamation-triangle"></i>
+            <h2>Listing not found</h2>
+            <p>This listing may have been removed or doesn't exist.</p>
+            <Link to="/browse" className="btn btn-primary">
+              <i className="fas fa-arrow-left"></i>
+              Back to Browse
+            </Link>
           </div>
         </div>
       </div>
     );
   }
 
-  const isOwner = user && user.id === listing.user_id;
+  const isOwnListing = user?.id === listing.user_id;
+  const hasImages = listing.images && listing.images.length > 0;
 
   return (
     <div className="listing-detail-page">
       <div className="container">
         <div className="listing-detail-container">
           {/* Back Button */}
-          <button onClick={() => navigate(-1)} className="back-button">
-            ← Back
-          </button>
-
-          {/* Listing Header */}
-          <div className="listing-header">
-            <div className="listing-title-section">
-              <h1 className="listing-title">{listing.title}</h1>
-              <div className="listing-meta">
-                <span className="category-badge">
-                  {listing.category}
-                </span>
-                <span className="listing-date">
-                  Posted on {formatDate(listing.created_at)}
-                </span>
-              </div>
-            </div>
-            <div className="listing-price">
-              ${listing.price}
-            </div>
+          <div className="back-navigation">
+            <button onClick={() => navigate(-1)} className="back-btn">
+              <i className="fas fa-arrow-left"></i>
+              Back
+            </button>
           </div>
 
-          {/* Listing Content */}
-          <div className="listing-content">
-            {/* Images */}
-            {listing.images && listing.images.length > 0 && (
-              <div className="listing-images">
+          <div className="listing-detail-content">
+            {/* Images Section */}
+            <div className="listing-images">
+              {hasImages ? (
                 <div className="image-gallery">
-                  {listing.images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`${listing.title} - Image ${index + 1}`}
-                      className="listing-image"
+                  <div className="main-image">
+                    <img 
+                      src={listing.images[currentImageIndex]} 
+                      alt={listing.title}
                     />
-                  ))}
+                    {listing.images.length > 1 && (
+                      <>
+                        <button 
+                          className="image-nav prev" 
+                          onClick={() => setCurrentImageIndex(
+                            currentImageIndex === 0 ? listing.images.length - 1 : currentImageIndex - 1
+                          )}
+                        >
+                          <i className="fas fa-chevron-left"></i>
+                        </button>
+                        <button 
+                          className="image-nav next" 
+                          onClick={() => setCurrentImageIndex(
+                            currentImageIndex === listing.images.length - 1 ? 0 : currentImageIndex + 1
+                          )}
+                        >
+                          <i className="fas fa-chevron-right"></i>
+                        </button>
+                        <div className="image-counter">
+                          {currentImageIndex + 1} / {listing.images.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  {listing.images.length > 1 && (
+                    <div className="image-thumbnails">
+                      {listing.images.map((image, index) => (
+                        <button
+                          key={index}
+                          className={`thumbnail ${index === currentImageIndex ? 'active' : ''}`}
+                          onClick={() => setCurrentImageIndex(index)}
+                        >
+                          <img src={image} alt={`Thumbnail ${index + 1}`} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-
-            {/* Description */}
-            <div className="listing-description">
-              <h3 className="section-title">Description</h3>
-              <p className="description-text">{listing.description}</p>
+              ) : (
+                <div className="no-images">
+                  <i className="fas fa-image"></i>
+                  <span>No images available</span>
+                </div>
+              )}
             </div>
 
-            {/* Details */}
-            <div className="listing-details">
-              <h3 className="section-title">Details</h3>
-              <div className="details-grid">
-                <div className="detail-item">
-                  <span className="detail-label">Category:</span>
-                  <span className="detail-value">{listing.category}</span>
+            {/* Listing Information */}
+            <div className="listing-info">
+              <div className="listing-header">
+                <div className="title-section">
+                  <span className="category-badge">{listing.category}</span>
+                  <h1 className="listing-title">{listing.title}</h1>
+                  <div className="price-section">
+                    <span className="price">${listing.price}</span>
+                  </div>
                 </div>
-                <div className="detail-item">
-                  <span className="detail-label">Location:</span>
-                  <span className="detail-value">📍 {listing.location}</span>
-                </div>
-                
-                {/* Category-specific details */}
-                {listing.breed && (
-                  <div className="detail-item">
-                    <span className="detail-label">Breed:</span>
-                    <span className="detail-value">{listing.breed}</span>
-                  </div>
-                )}
-                {listing.age && (
-                  <div className="detail-item">
-                    <span className="detail-label">Age:</span>
-                    <span className="detail-value">{listing.age}</span>
-                  </div>
-                )}
-                {listing.health_status && (
-                  <div className="detail-item">
-                    <span className="detail-label">Health Status:</span>
-                    <span className="detail-value">{listing.health_status}</span>
-                  </div>
-                )}
-                {listing.size && (
-                  <div className="detail-item">
-                    <span className="detail-label">Size:</span>
-                    <span className="detail-value">{listing.size}</span>
-                  </div>
-                )}
-                {listing.material && (
-                  <div className="detail-item">
-                    <span className="detail-label">Material:</span>
-                    <span className="detail-value">{listing.material}</span>
-                  </div>
-                )}
-                {listing.condition && (
-                  <div className="detail-item">
-                    <span className="detail-label">Condition:</span>
-                    <span className="detail-value">{listing.condition}</span>
-                  </div>
-                )}
               </div>
+
+              <div className="listing-description">
+                <h3>Description</h3>
+                <p>{listing.description}</p>
+              </div>
+
+              <div className="listing-details">
+                <h3>Details</h3>
+                <div className="details-grid">
+                  <div className="detail-item">
+                    <i className="fas fa-map-marker-alt"></i>
+                    <span className="detail-label">Location:</span>
+                    <span className="detail-value">{listing.location}</span>
+                  </div>
+                  
+                  <div className="detail-item">
+                    <i className="fas fa-calendar"></i>
+                    <span className="detail-label">Posted:</span>
+                    <span className="detail-value">{formatDate(listing.created_at)}</span>
+                  </div>
+
+                  {listing.breed && (
+                    <div className="detail-item">
+                      <i className="fas fa-paw"></i>
+                      <span className="detail-label">Breed:</span>
+                      <span className="detail-value">{listing.breed}</span>
+                    </div>
+                  )}
+
+                  {listing.age && (
+                    <div className="detail-item">
+                      <i className="fas fa-clock"></i>
+                      <span className="detail-label">Age:</span>
+                      <span className="detail-value">{listing.age}</span>
+                    </div>
+                  )}
+
+                  {listing.health_status && (
+                    <div className="detail-item">
+                      <i className="fas fa-heart"></i>
+                      <span className="detail-label">Health:</span>
+                      <span className="detail-value">{listing.health_status}</span>
+                    </div>
+                  )}
+
+                  {listing.size && (
+                    <div className="detail-item">
+                      <i className="fas fa-expand-arrows-alt"></i>
+                      <span className="detail-label">Size:</span>
+                      <span className="detail-value">{listing.size}</span>
+                    </div>
+                  )}
+
+                  {listing.material && (
+                    <div className="detail-item">
+                      <i className="fas fa-hammer"></i>
+                      <span className="detail-label">Material:</span>
+                      <span className="detail-value">{listing.material}</span>
+                    </div>
+                  )}
+
+                  {listing.condition && (
+                    <div className="detail-item">
+                      <i className="fas fa-star"></i>
+                      <span className="detail-label">Condition:</span>
+                      <span className="detail-value">{listing.condition}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Seller Information */}
+              <div className="seller-info">
+                <h3>Seller Information</h3>
+                <div className="seller-card">
+                  <div className="seller-details">
+                    <div className="seller-avatar">
+                      <i className="fas fa-user"></i>
+                    </div>
+                    <div className="seller-content">
+                      <h4 className="seller-name">{seller.name}</h4>
+                      <p className="seller-location">
+                        <i className="fas fa-map-marker-alt"></i>
+                        {seller.location}
+                      </p>
+                      <p className="seller-phone">
+                        <i className="fas fa-phone"></i>
+                        {seller.phone}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {!isOwnListing && (
+                    <div className="contact-actions">
+                      <button 
+                        onClick={handleContactSeller}
+                        className="btn btn-primary contact-btn"
+                      >
+                        <i className="fas fa-comment"></i>
+                        Contact Seller
+                      </button>
+                      <a 
+                        href={`tel:${seller.phone}`} 
+                        className="btn btn-outline call-btn"
+                      >
+                        <i className="fas fa-phone"></i>
+                        Call
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {isOwnListing && (
+                <div className="owner-actions">
+                  <div className="alert alert-info">
+                    <i className="fas fa-info-circle"></i>
+                    This is your listing
+                  </div>
+                  <Link to="/profile" className="btn btn-outline">
+                    <i className="fas fa-edit"></i>
+                    Manage Listings
+                  </Link>
+                </div>
+              )}
             </div>
-
-            {/* Contact Seller */}
-            {!isOwner && (
-              <div className="contact-seller">
-                <h3 className="section-title">Contact Seller</h3>
-                
-                <div className="contact-actions">
-                  <button onClick={handleCallSeller} className="btn btn-secondary">
-                    📞 Call Seller
-                  </button>
-                </div>
-
-                <form onSubmit={handleSendMessage} className="message-form">
-                  <div className="form-group">
-                    <label htmlFor="message" className="form-label">
-                      Send a Message
-                    </label>
-                    <textarea
-                      id="message"
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                      className="form-input form-textarea"
-                      placeholder="Hi, I'm interested in your listing..."
-                      rows="4"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={sendingMessage || !messageText.trim()}
-                  >
-                    {sendingMessage ? 'Sending...' : '💬 Send Message'}
-                  </button>
-                </form>
-
-                {!user && (
-                  <div className="login-prompt-small">
-                    <p>
-                      <button 
-                        onClick={() => navigate('/login')}
-                        className="auth-link"
-                      >
-                        Login
-                      </button>
-                      {' '}or{' '}
-                      <button 
-                        onClick={() => navigate('/register')}
-                        className="auth-link"
-                      >
-                        Sign up
-                      </button>
-                      {' '}to contact the seller
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Owner Actions */}
-            {isOwner && (
-              <div className="owner-actions">
-                <h3 className="section-title">Your Listing</h3>
-                <p className="owner-note">
-                  This is your listing. You can edit or delete it from your profile.
-                </p>
-                <button 
-                  onClick={() => navigate('/profile')}
-                  className="btn btn-outline"
-                >
-                  Go to Profile
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
