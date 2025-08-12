@@ -11,6 +11,7 @@ import ListingDetail from './pages/ListingDetail';
 import Messages from './pages/Messages';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
+import Admin from './pages/Admin';
 import './App.css';
 
 function App() {
