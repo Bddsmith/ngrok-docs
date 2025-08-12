@@ -63,6 +63,13 @@ const Navbar = () => {
                 >
                   Messages
                 </Link>
+                <Link 
+                  to="/admin" 
+                  className={`nav-link ${isActivePath('/admin') ? 'active' : ''}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Admin
+                </Link>
               </>
             )}
           </div>
