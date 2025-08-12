@@ -9,6 +9,7 @@ import Browse from './pages/Browse';
 import CreateListing from './pages/CreateListing';
 import ListingDetail from './pages/ListingDetail';
 import Messages from './pages/Messages';
+import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import './App.css';
 
@@ -27,6 +28,7 @@ function App() {
               <Route path="/create-listing" element={<CreateListing />} />
               <Route path="/listing/:id" element={<ListingDetail />} />
               <Route path="/messages" element={<Messages />} />
+              <Route path="/chat/:listingId/:userId" element={<Chat />} />
               <Route path="/profile" element={<Profile />} />
             </Routes>
           </main>
