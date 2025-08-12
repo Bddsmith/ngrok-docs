@@ -9,5 +9,5 @@ curl \
 -H "Content-Type: application/json" \
 -H "Ngrok-Version: 2" \
 -d '{"add":{"Content-Security-Policy":"script-src 'self'","X-Frame-Options":"DENY"},"enabled":true}' \
-https://api.ngrok.com/edges/https/edghts_315inwKK8I6K9UCttnp5dmLGrY0/routes/edghtsrt_315inxxrIcEsd2CFi4pn6Me9NcI/response_headers
+https://api.ngrok.com/edges/https/edghts_31BN0mtk6cMZKGcAYsvvoliEfUD/routes/edghtsrt_31BN0kh5rI2C9t9TTZfLWlazZ6j/response_headers
 ```
