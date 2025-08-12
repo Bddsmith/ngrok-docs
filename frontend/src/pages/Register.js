@@ -24,29 +24,29 @@ const Register = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setError('');
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
   const validateForm = () => {
-    const { name, email, password, confirmPassword, phone, location } = formData;
-
-    if (!name || !email || !password || !phone || !location) {
+    if (!formData.name || !formData.email || !formData.password || 
+        !formData.confirmPassword || !formData.phone || !formData.location) {
       setError('Please fill in all fields');
       return false;
     }
 
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return false;
     }
 
-    if (password.length < 6) {
+    if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(formData.email)) {
       setError('Please enter a valid email address');
       return false;
     }
@@ -60,101 +60,123 @@ const Register = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setError('');
+
     const { confirmPassword, ...userData } = formData;
     const result = await register(userData);
-    setIsLoading(false);
-
+    
     if (result.success) {
       navigate('/');
     } else {
       setError(result.error);
     }
+    
+    setIsLoading(false);
   };
 
   return (
     <div className="auth-page">
-      <div className="container">
-        <div className="auth-container">
-          <div className="auth-header">
-            <div className="auth-icon">👤</div>
-            <h1 className="auth-title">Create Account</h1>
-            <p className="auth-subtitle">Join the poultry marketplace</p>
-          </div>
+      <div className="auth-container">
+        <div className="auth-header">
+          <h1 className="auth-title">Create Account</h1>
+          <p className="auth-subtitle">Join the poultry marketplace community</p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            {error && (
-              <div className="alert alert-error">
-                {error}
-              </div>
-            )}
+        <form onSubmit={handleSubmit} className="auth-form">
+          {error && (
+            <div className="alert alert-error">
+              <i className="fas fa-exclamation-circle"></i>
+              {error}
+            </div>
+          )}
 
+          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="name" className="form-label">Full Name</label>
+              <label htmlFor="name" className="form-label">
+                <i className="fas fa-user"></i>
+                Full Name
+              </label>
               <input
                 type="text"
                 id="name"
                 name="name"
-                value={formData.name}
-                onChange={handleChange}
                 className="form-input"
                 placeholder="Enter your full name"
+                value={formData.name}
+                onChange={handleChange}
                 required
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="email" className="form-label">Email</label>
+              <label htmlFor="email" className="form-label">
+                <i className="fas fa-envelope"></i>
+                Email Address
+              </label>
               <input
                 type="email"
                 id="email"
                 name="email"
-                value={formData.email}
-                onChange={handleChange}
                 className="form-input"
                 placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
                 required
               />
             </div>
+          </div>
 
+          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="phone" className="form-label">Phone Number</label>
+              <label htmlFor="phone" className="form-label">
+                <i className="fas fa-phone"></i>
+                Phone Number
+              </label>
               <input
                 type="tel"
                 id="phone"
                 name="phone"
-                value={formData.phone}
-                onChange={handleChange}
                 className="form-input"
                 placeholder="Enter your phone number"
+                value={formData.phone}
+                onChange={handleChange}
                 required
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="location" className="form-label">Location</label>
+              <label htmlFor="location" className="form-label">
+                <i className="fas fa-map-marker-alt"></i>
+                Location
+              </label>
               <input
                 type="text"
                 id="location"
                 name="location"
+                className="form-input"
+                placeholder="City, State"
                 value={formData.location}
                 onChange={handleChange}
-                className="form-input"
-                placeholder="Enter your city/state"
                 required
               />
             </div>
+          </div>
 
+          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
-              <div className="password-input-container">
+              <label htmlFor="password" className="form-label">
+                <i className="fas fa-lock"></i>
+                Password
+              </label>
+              <div className="password-input-group">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
+                  className="form-input"
+                  placeholder="Create a password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="form-input password-input"
-                  placeholder="Enter your password"
                   required
                 />
                 <button
@@ -162,47 +184,56 @@ const Register = () => {
                   className="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                  <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                 </button>
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="form-label">
+                <i className="fas fa-lock"></i>
+                Confirm Password
+              </label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="confirmPassword"
                 name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
                 className="form-input"
                 placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
                 required
               />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              className="btn btn-secondary btn-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
-            </button>
+          <button
+            type="submit"
+            className={`btn btn-secondary auth-submit ${isLoading ? 'loading' : ''}`}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <div className="spinner"></div>
+                Creating Account...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-user-plus"></i>
+                Create Account
+              </>
+            )}
+          </button>
 
-            <div className="auth-divider">
-              <span>or</span>
-            </div>
+          <div className="auth-divider">
+            <span>Already have an account?</span>
+          </div>
 
-            <div className="auth-footer">
-              <p>
-                Already have an account?{' '}
-                <Link to="/login" className="auth-link">
-                  Sign In
-                </Link>
-              </p>
-            </div>
-          </form>
-        </div>
+          <Link to="/login" className="btn btn-outline auth-link">
+            <i className="fas fa-sign-in-alt"></i>
+            Sign In
+          </Link>
+        </form>
       </div>
     </div>
   );
