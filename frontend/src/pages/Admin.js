@@ -18,10 +18,12 @@ const Admin = () => {
       setLoading(true);
       setError('');
       
+      const backendURL = process.env.REACT_APP_BACKEND_URL || '';
+      
       // Load both users and stats
       const [usersResponse, statsResponse] = await Promise.all([
-        axios.get('/api/admin/users'),
-        axios.get('/api/admin/stats')
+        axios.get(`${backendURL}/api/admin/users`),
+        axios.get(`${backendURL}/api/admin/stats`)
       ]);
       
       setUsers(usersResponse.data);
