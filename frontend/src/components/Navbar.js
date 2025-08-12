@@ -7,145 +7,106 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
-    setIsMenuOpen(false);
+    setIsMobileMenuOpen(false);
   };
 
-  const isActive = (path) => location.pathname === path;
+  const isActivePath = (path) => {
+    return location.pathname === path;
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   return (
     <nav className="navbar">
-      <div className="container">
-        <div className="navbar-content">
-          <Link to="/" className="navbar-brand">
-            🐔 Poultry Marketplace
-          </Link>
+      <div className="navbar-container">
+        <Link to="/" className="navbar-brand">
+          <i className="fas fa-feather"></i>
+          <span>Poultry Marketplace</span>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <div className="navbar-nav desktop-nav">
+        <div className={`navbar-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+          <div className="navbar-nav">
+            <Link 
+              to="/" 
+              className={`nav-link ${isActivePath('/') ? 'active' : ''}`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
             <Link 
               to="/browse" 
-              className={`nav-link ${isActive('/browse') ? 'active' : ''}`}
+              className={`nav-link ${isActivePath('/browse') ? 'active' : ''}`}
+              onClick={() => setIsMobileMenuOpen(false)}
             >
-              Browse Listings
-            </Link>
-            <Link 
-              to="/create-listing" 
-              className={`nav-link ${isActive('/create-listing') ? 'active' : ''}`}
-            >
-              Create Listing
+              Browse
             </Link>
             {user && (
-              <Link 
-                to="/messages" 
-                className={`nav-link ${isActive('/messages') ? 'active' : ''}`}
-              >
-                Messages
-              </Link>
+              <>
+                <Link 
+                  to="/create-listing" 
+                  className={`nav-link ${isActivePath('/create-listing') ? 'active' : ''}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Sell
+                </Link>
+                <Link 
+                  to="/messages" 
+                  className={`nav-link ${isActivePath('/messages') ? 'active' : ''}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Messages
+                </Link>
+              </>
             )}
           </div>
 
-          {/* User Menu */}
-          <div className="navbar-user desktop-nav">
+          <div className="navbar-actions">
             {user ? (
               <div className="user-menu">
-                <Link to="/profile" className="user-profile">
-                  <span className="user-avatar">👤</span>
-                  <span className="user-name">{user.name}</span>
-                </Link>
-                <button onClick={handleLogout} className="btn btn-outline btn-sm">
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="auth-links">
-                <Link to="/login" className="btn btn-outline btn-sm">
-                  Login
-                </Link>
-                <Link to="/register" className="btn btn-primary btn-sm">
-                  Sign Up
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button 
-            className="mobile-menu-btn"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="mobile-nav">
-            <Link 
-              to="/browse" 
-              className="mobile-nav-link"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Browse Listings
-            </Link>
-            <Link 
-              to="/create-listing" 
-              className="mobile-nav-link"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Create Listing
-            </Link>
-            {user && (
-              <Link 
-                to="/messages" 
-                className="mobile-nav-link"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Messages
-              </Link>
-            )}
-            {user ? (
-              <>
                 <Link 
                   to="/profile" 
-                  className="mobile-nav-link"
-                  onClick={() => setIsMenuOpen(false)}
+                  className={`nav-link user-link ${isActivePath('/profile') ? 'active' : ''}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Profile
+                  <i className="fas fa-user"></i>
+                  <span className="user-name">{user.name}</span>
                 </Link>
-                <button 
-                  onClick={handleLogout} 
-                  className="mobile-nav-link mobile-logout"
-                >
-                  Logout
+                <button className="btn btn-outline logout-btn" onClick={handleLogout}>
+                  <i className="fas fa-sign-out-alt"></i>
+                  <span>Logout</span>
                 </button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="auth-buttons">
                 <Link 
                   to="/login" 
-                  className="mobile-nav-link"
-                  onClick={() => setIsMenuOpen(false)}
+                  className="btn btn-outline"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Login
                 </Link>
                 <Link 
                   to="/register" 
-                  className="mobile-nav-link"
-                  onClick={() => setIsMenuOpen(false)}
+                  className="btn btn-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign Up
                 </Link>
-              </>
+              </div>
             )}
           </div>
-        )}
+        </div>
+
+        <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
+          <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+        </button>
       </div>
     </nav>
   );
