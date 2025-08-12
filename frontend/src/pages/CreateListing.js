@@ -4,12 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { listingsAPI } from '../services/api';
 import './CreateListing.css';
 
-const CATEGORIES = [
-  { key: 'poultry', label: 'Poultry', icon: '🐔' },
-  { key: 'coop', label: 'Coop', icon: '🏠' },
-  { key: 'cage', label: 'Cage', icon: '🔲' },
-];
-
 const CreateListing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -34,25 +28,52 @@ const CreateListing = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const categories = [
+    { key: 'poultry', label: 'Poultry', icon: 'fas fa-dove' },
+    { key: 'coop', label: 'Coop', icon: 'fas fa-home' },
+    { key: 'cage', label: 'Cage', icon: 'fas fa-square' },
+  ];
+
+  // Redirect if not authenticated
+  if (!user) {
+    return (
+      <div className="create-listing-page">
+        <div className="container-sm">
+          <div className="auth-required">
+            <i className="fas fa-lock"></i>
+            <h2>Authentication Required</h2>
+            <p>You need to be logged in to create a listing.</p>
+            <button 
+              onClick={() => navigate('/login')}
+              className="btn btn-primary"
+            >
+              Login to Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setError('');
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (error) setError('');
   };
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    
-    files.forEach((file) => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setImages(prev => [...prev, event.target.result]);
-        };
-        reader.readAsDataURL(file);
-      }
+    if (images.length + files.length > 5) {
+      setError('You can upload a maximum of 5 images');
+      return;
+    }
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImages(prev => [...prev, event.target.result]);
+      };
+      reader.readAsDataURL(file);
     });
   };
 
@@ -83,14 +104,11 @@ const CreateListing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!user) {
-      setError('Please log in to create a listing');
-      return;
-    }
-
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setError('');
+
     try {
       const listingData = {
         title: formData.title.trim(),
@@ -112,11 +130,11 @@ const CreateListing = () => {
         if (formData.condition) listingData.condition = formData.condition.trim();
       }
 
-      await listingsAPI.create(listingData, user.id);
-      navigate('/browse');
+      const createdListing = await listingsAPI.create(listingData, user.id);
+      navigate(`/listing/${createdListing.id || createdListing._id}`);
     } catch (error) {
       console.error('Error creating listing:', error);
-      setError('Failed to create listing. Please try again.');
+      setError(error.response?.data?.detail || 'Failed to create listing. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -125,122 +143,126 @@ const CreateListing = () => {
   const renderCategoryFields = () => {
     if (formData.category === 'poultry') {
       return (
-        <>
-          <div className="form-group">
-            <label htmlFor="breed" className="form-label">Breed</label>
-            <input
-              type="text"
-              id="breed"
-              name="breed"
-              value={formData.breed}
-              onChange={handleInputChange}
-              className="form-input"
-              placeholder="e.g., Rhode Island Red, Leghorn"
-            />
+        <div className="category-fields">
+          <h3 className="section-title">Poultry Details</h3>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-paw"></i>
+                Breed
+              </label>
+              <input
+                type="text"
+                name="breed"
+                className="form-input"
+                placeholder="e.g., Rhode Island Red, Leghorn"
+                value={formData.breed}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-clock"></i>
+                Age
+              </label>
+              <input
+                type="text"
+                name="age"
+                className="form-input"
+                placeholder="e.g., 6 months, 2 years"
+                value={formData.age}
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
-
           <div className="form-group">
-            <label htmlFor="age" className="form-label">Age</label>
+            <label className="form-label">
+              <i className="fas fa-heart"></i>
+              Health Status
+            </label>
             <input
               type="text"
-              id="age"
-              name="age"
-              value={formData.age}
-              onChange={handleInputChange}
-              className="form-input"
-              placeholder="e.g., 6 months, 2 years"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="health_status" className="form-label">Health Status</label>
-            <input
-              type="text"
-              id="health_status"
               name="health_status"
-              value={formData.health_status}
-              onChange={handleInputChange}
               className="form-input"
               placeholder="e.g., Excellent, Vaccinated"
+              value={formData.health_status}
+              onChange={handleInputChange}
             />
           </div>
-        </>
+        </div>
       );
     } else {
       return (
-        <>
-          <div className="form-group">
-            <label htmlFor="size" className="form-label">Size</label>
-            <input
-              type="text"
-              id="size"
-              name="size"
-              value={formData.size}
-              onChange={handleInputChange}
-              className="form-input"
-              placeholder="e.g., 4x4 feet, Large"
-            />
+        <div className="category-fields">
+          <h3 className="section-title">{formData.category === 'coop' ? 'Coop' : 'Cage'} Details</h3>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-expand-arrows-alt"></i>
+                Size
+              </label>
+              <input
+                type="text"
+                name="size"
+                className="form-input"
+                placeholder="e.g., 4x4 feet, Large"
+                value={formData.size}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-hammer"></i>
+                Material
+              </label>
+              <input
+                type="text"
+                name="material"
+                className="form-input"
+                placeholder="e.g., Wood, Metal, Wire"
+                value={formData.material}
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
-
           <div className="form-group">
-            <label htmlFor="material" className="form-label">Material</label>
-            <input
-              type="text"
-              id="material"
-              name="material"
-              value={formData.material}
-              onChange={handleInputChange}
-              className="form-input"
-              placeholder="e.g., Wood, Metal, Wire"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="condition" className="form-label">Condition</label>
-            <input
-              type="text"
-              id="condition"
+            <label className="form-label">
+              <i className="fas fa-star"></i>
+              Condition
+            </label>
+            <select
               name="condition"
+              className="form-select"
               value={formData.condition}
               onChange={handleInputChange}
-              className="form-input"
-              placeholder="e.g., Excellent, Good, Fair"
-            />
+            >
+              <option value="">Select condition</option>
+              <option value="Excellent">Excellent</option>
+              <option value="Good">Good</option>
+              <option value="Fair">Fair</option>
+              <option value="Needs Repair">Needs Repair</option>
+            </select>
           </div>
-        </>
+        </div>
       );
     }
   };
 
-  if (!user) {
-    return (
-      <div className="create-listing-page">
-        <div className="container">
-          <div className="login-prompt">
-            <div className="login-prompt-icon">👤</div>
-            <h2 className="login-prompt-title">Login Required</h2>
-            <p className="login-prompt-text">Please log in to create a listing</p>
-            <button 
-              onClick={() => navigate('/login')}
-              className="btn btn-primary"
-            >
-              Log In
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="create-listing-page">
-      <div className="container">
-        <div className="create-listing-container">
-          <h1 className="page-title">Create Listing</h1>
-          
-          <form onSubmit={handleSubmit} className="create-listing-form">
+      <div className="page-container">
+        <div className="container-sm">
+          <div className="page-header">
+            <h1 className="page-title">Create New Listing</h1>
+            <p className="page-subtitle">
+              List your poultry, coops, or cages for sale
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="listing-form">
             {error && (
               <div className="alert alert-error">
+                <i className="fas fa-exclamation-circle"></i>
                 {error}
               </div>
             )}
@@ -248,8 +270,8 @@ const CreateListing = () => {
             {/* Category Selection */}
             <div className="form-section">
               <h3 className="section-title">Category</h3>
-              <div className="category-selection">
-                {CATEGORIES.map((category) => (
+              <div className="category-selector">
+                {categories.map((category) => (
                   <label key={category.key} className="category-option">
                     <input
                       type="radio"
@@ -258,9 +280,9 @@ const CreateListing = () => {
                       checked={formData.category === category.key}
                       onChange={handleInputChange}
                     />
-                    <div className="category-option-content">
-                      <span className="category-option-icon">{category.icon}</span>
-                      <span className="category-option-label">{category.label}</span>
+                    <div className="category-card-option">
+                      <i className={category.icon}></i>
+                      <span>{category.label}</span>
                     </div>
                   </label>
                 ))}
@@ -272,113 +294,131 @@ const CreateListing = () => {
               <h3 className="section-title">Basic Information</h3>
               
               <div className="form-group">
-                <label htmlFor="title" className="form-label">Title *</label>
+                <label className="form-label">
+                  <i className="fas fa-tag"></i>
+                  Title *
+                </label>
                 <input
                   type="text"
-                  id="title"
                   name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
                   className="form-input"
                   placeholder="Enter a descriptive title"
+                  value={formData.title}
+                  onChange={handleInputChange}
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="description" className="form-label">Description *</label>
+                <label className="form-label">
+                  <i className="fas fa-align-left"></i>
+                  Description *
+                </label>
                 <textarea
-                  id="description"
                   name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
                   className="form-input form-textarea"
                   placeholder="Provide details about your listing"
                   rows="4"
+                  value={formData.description}
+                  onChange={handleInputChange}
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="price" className="form-label">Price * ($)</label>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  required
-                />
-              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">
+                    <i className="fas fa-dollar-sign"></i>
+                    Price *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    className="form-input"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
 
-              <div className="form-group">
-                <label htmlFor="location" className="form-label">Location *</label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  placeholder="City, State"
-                  required
-                />
+                <div className="form-group">
+                  <label className="form-label">
+                    <i className="fas fa-map-marker-alt"></i>
+                    Location *
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    className="form-input"
+                    placeholder="City, State"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
               </div>
             </div>
 
             {/* Category-specific fields */}
-            <div className="form-section">
-              <h3 className="section-title">Additional Details</h3>
-              {renderCategoryFields()}
-            </div>
+            {renderCategoryFields()}
 
             {/* Images */}
             <div className="form-section">
               <h3 className="section-title">Photos</h3>
-              <div className="image-upload-container">
+              <div className="image-upload-section">
                 <input
                   type="file"
-                  id="images"
+                  id="image-upload"
                   multiple
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="image-input"
                 />
-                <label htmlFor="images" className="image-upload-button">
-                  📷 Add Photos
+                <label htmlFor="image-upload" className="image-upload-label">
+                  <i className="fas fa-camera"></i>
+                  <span>Add Photos</span>
+                  <small>You can add up to 5 photos</small>
                 </label>
-                <p className="image-hint">You can add up to 5 photos</p>
-                
-                {images.length > 0 && (
-                  <div className="image-preview-container">
-                    {images.map((image, index) => (
-                      <div key={index} className="image-preview">
-                        <img src={image} alt={`Preview ${index + 1}`} />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="image-remove-button"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {images.length > 0 && (
+                <div className="image-preview-grid">
+                  {images.map((image, index) => (
+                    <div key={index} className="image-preview">
+                      <img src={image} alt={`Preview ${index + 1}`} />
+                      <button
+                        type="button"
+                        className="remove-image"
+                        onClick={() => removeImage(index)}
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              className="btn btn-secondary btn-full"
+              className={`btn btn-primary submit-btn ${isLoading ? 'loading' : ''}`}
               disabled={isLoading}
             >
-              {isLoading ? 'Creating Listing...' : 'Create Listing'}
+              {isLoading ? (
+                <>
+                  <div className="spinner"></div>
+                  Creating Listing...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-plus"></i>
+                  Create Listing
+                </>
+              )}
             </button>
           </form>
         </div>
