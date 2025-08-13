@@ -314,6 +314,193 @@ class PoultryAPITester:
             print(f"❌ Search Functionality: Exception - {str(e)}")
             return False
     
+    def test_eggs_category_support(self):
+        """Test eggs category support in existing endpoints"""
+        print("\n=== Testing Eggs Category Support ===")
+        try:
+            # Test GET /api/listings with category=eggs parameter
+            response = self.session.get(f"{API_BASE_URL}/listings?category=eggs")
+            print(f"GET /api/listings?category=eggs - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"Found {len(data)} eggs listings")
+                
+                # Test GET /api/search with category=eggs filter
+                response2 = self.session.get(f"{API_BASE_URL}/search?category=eggs")
+                print(f"GET /api/search?category=eggs - Status Code: {response2.status_code}")
+                
+                if response2.status_code == 200:
+                    data2 = response2.json()
+                    print(f"Found {len(data2)} eggs listings in search")
+                    print("✅ Eggs Category Support: PASSED")
+                    return True
+                else:
+                    print(f"❌ Eggs Category Support: Search failed with status {response2.status_code}")
+                    return False
+            else:
+                print(f"❌ Eggs Category Support: Listings failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Eggs Category Support: Exception - {str(e)}")
+            return False
+    
+    def test_create_eggs_listing(self):
+        """Test creating eggs listing with eggs-specific fields"""
+        print("\n=== Testing Create Eggs Listing ===")
+        try:
+            eggs_listing_data = {
+                "title": "Fresh Organic Chicken Eggs",
+                "description": "Farm fresh eggs from pasture-raised hens",
+                "category": "eggs", 
+                "price": 6.50,
+                "location": "Farm Valley, TX",
+                "egg_type": "Chicken",
+                "laid_date": "2025-01-13",
+                "feed_type": "Organic Certified",
+                "quantity_available": "2 dozen",
+                "farm_practices": "Pasture-raised, USDA Organic"
+            }
+            
+            response = self.session.post(
+                f"{API_BASE_URL}/listings?user_id={self.user_id}",
+                json=eggs_listing_data
+            )
+            print(f"Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                listing_id = data.get("_id") or data.get("id")
+                if (listing_id and 
+                    data["title"] == eggs_listing_data["title"] and
+                    data["category"] == "eggs" and
+                    data.get("egg_type") == eggs_listing_data["egg_type"] and
+                    data.get("laid_date") == eggs_listing_data["laid_date"] and
+                    data.get("feed_type") == eggs_listing_data["feed_type"] and
+                    data.get("quantity_available") == eggs_listing_data["quantity_available"] and
+                    data.get("farm_practices") == eggs_listing_data["farm_practices"]):
+                    
+                    self.eggs_listing_id = listing_id
+                    print("✅ Create Eggs Listing: PASSED")
+                    print(f"✅ All eggs-specific fields stored correctly")
+                    return True
+                else:
+                    print("❌ Create Eggs Listing: Missing or incorrect eggs-specific fields")
+                    print(f"Expected egg_type: {eggs_listing_data['egg_type']}, Got: {data.get('egg_type')}")
+                    print(f"Expected laid_date: {eggs_listing_data['laid_date']}, Got: {data.get('laid_date')}")
+                    print(f"Expected feed_type: {eggs_listing_data['feed_type']}, Got: {data.get('feed_type')}")
+                    print(f"Expected quantity_available: {eggs_listing_data['quantity_available']}, Got: {data.get('quantity_available')}")
+                    print(f"Expected farm_practices: {eggs_listing_data['farm_practices']}, Got: {data.get('farm_practices')}")
+                    return False
+            else:
+                print(f"❌ Create Eggs Listing: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Create Eggs Listing: Exception - {str(e)}")
+            return False
+    
+    def test_eggs_listing_retrieval(self):
+        """Test retrieving eggs listing with all eggs-specific fields"""
+        print("\n=== Testing Eggs Listing Retrieval ===")
+        if not hasattr(self, 'eggs_listing_id') or not self.eggs_listing_id:
+            print("❌ Eggs Listing Retrieval: No eggs listing ID available")
+            return False
+            
+        try:
+            # Test GET /api/listings/{id} for eggs listing
+            response = self.session.get(f"{API_BASE_URL}/listings/{self.eggs_listing_id}")
+            print(f"GET /api/listings/{self.eggs_listing_id} - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                listing_id = data.get("_id") or data.get("id")
+                
+                # Verify all eggs-specific fields are present
+                required_eggs_fields = ["egg_type", "laid_date", "feed_type", "quantity_available", "farm_practices"]
+                missing_fields = []
+                
+                for field in required_eggs_fields:
+                    if field not in data or data[field] is None:
+                        missing_fields.append(field)
+                
+                if listing_id == self.eggs_listing_id and not missing_fields:
+                    print("✅ Eggs Listing Retrieval: PASSED")
+                    print("✅ All eggs-specific fields present in response")
+                    
+                    # Test that eggs listing appears in category filter
+                    response2 = self.session.get(f"{API_BASE_URL}/listings?category=eggs")
+                    if response2.status_code == 200:
+                        eggs_listings = response2.json()
+                        found_listing = any(
+                            (listing.get("_id") or listing.get("id")) == self.eggs_listing_id 
+                            for listing in eggs_listings
+                        )
+                        if found_listing:
+                            print("✅ Eggs listing appears in category filter")
+                            return True
+                        else:
+                            print("❌ Eggs listing not found in category filter")
+                            return False
+                    else:
+                        print(f"❌ Category filter failed with status {response2.status_code}")
+                        return False
+                else:
+                    if missing_fields:
+                        print(f"❌ Eggs Listing Retrieval: Missing fields: {missing_fields}")
+                    else:
+                        print("❌ Eggs Listing Retrieval: Invalid listing ID")
+                    return False
+            else:
+                print(f"❌ Eggs Listing Retrieval: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Eggs Listing Retrieval: Exception - {str(e)}")
+            return False
+    
+    def test_admin_stats_with_eggs(self):
+        """Test admin statistics include eggs count"""
+        print("\n=== Testing Admin Statistics with Eggs ===")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/admin/stats")
+            print(f"GET /api/admin/stats - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check if listings_by_category includes eggs
+                if "listings_by_category" in data:
+                    category_stats = data["listings_by_category"]
+                    if "eggs" in category_stats:
+                        eggs_count = category_stats["eggs"]
+                        print(f"✅ Admin Stats: Found eggs category with {eggs_count} listings")
+                        
+                        # Verify the count is reasonable (should be at least 1 if we created an eggs listing)
+                        if hasattr(self, 'eggs_listing_id') and self.eggs_listing_id:
+                            if eggs_count >= 1:
+                                print("✅ Admin Statistics with Eggs: PASSED")
+                                return True
+                            else:
+                                print("❌ Admin Statistics: Eggs count should be at least 1")
+                                return False
+                        else:
+                            print("✅ Admin Statistics with Eggs: PASSED")
+                            return True
+                    else:
+                        print("❌ Admin Statistics: 'eggs' category missing from listings_by_category")
+                        return False
+                else:
+                    print("❌ Admin Statistics: 'listings_by_category' missing from response")
+                    return False
+            else:
+                print(f"❌ Admin Statistics: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Admin Statistics: Exception - {str(e)}")
+            return False
+    
     def test_messaging_system(self):
         """Test messaging system endpoints"""
         print("\n=== Testing Messaging System ===")
