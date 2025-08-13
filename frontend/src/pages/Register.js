@@ -215,6 +215,22 @@ const Register = () => {
                   <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                 </button>
               </div>
+              
+              {/* Password Requirements */}
+              <div className="password-requirements">
+                <div className="requirements-header">
+                  <i className="fas fa-shield-alt"></i>
+                  Password Requirements:
+                </div>
+                <div className="requirements-list">
+                  {getPasswordStrength(formData.password).map((req, index) => (
+                    <div key={index} className={`requirement ${req.test ? 'met' : 'unmet'}`}>
+                      <i className={`fas ${req.test ? 'fa-check' : 'fa-times'}`}></i>
+                      {req.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="form-group">
