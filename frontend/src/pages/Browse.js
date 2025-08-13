@@ -291,6 +291,14 @@ const Browse = () => {
           )}
         </div>
       </div>
+      
+      {/* Advanced Search Modal */}
+      {showAdvancedSearch && (
+        <AdvancedSearch 
+          onResults={handleSearchResults}
+          onClose={handleAdvancedSearchClose}
+        />
+      )}
     </div>
   );
 };
