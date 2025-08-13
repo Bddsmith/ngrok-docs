@@ -13,6 +13,7 @@ import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
+import FollowingFeed from './pages/FollowingFeed';
 import './App.css';
 
 function App() {
