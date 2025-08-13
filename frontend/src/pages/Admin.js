@@ -236,13 +236,25 @@ const Admin = () => {
     <div className="admin-page">
       <div className="admin-header">
         <div className="container">
-          <h1 className="admin-title">
-            <i className="fas fa-cog"></i>
-            Admin Dashboard
-          </h1>
-          <p className="admin-subtitle">
-            Manage your Poultry Marketplace
-          </p>
+          <div className="admin-title-section">
+            <h1 className="admin-title">
+              <i className="fas fa-cog"></i>
+              Admin Dashboard
+            </h1>
+            <p className="admin-subtitle">
+              Manage your Poultry Marketplace
+            </p>
+          </div>
+          <div className="admin-user-section">
+            <span className="admin-user-info">
+              <i className="fas fa-user-shield"></i>
+              Welcome, {getAdminUsername()}
+            </span>
+            <button onClick={logout} className="admin-logout-btn">
+              <i className="fas fa-sign-out-alt"></i>
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
