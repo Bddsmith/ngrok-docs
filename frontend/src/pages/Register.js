@@ -94,6 +94,15 @@ const Register = () => {
     const result = await register(userData);
     
     if (result.success) {
+      // Show success message temporarily
+      setError(''); // Clear any previous errors
+      
+      // Add success indicator in the button
+      const submitBtn = document.querySelector('.auth-submit');
+      if (submitBtn) {
+        submitBtn.innerHTML = '<div class="spinner"></div>Registration Successful! Redirecting...';
+      }
+      
       // Add a small delay to ensure authentication state updates complete
       setTimeout(() => {
         navigate('/');
