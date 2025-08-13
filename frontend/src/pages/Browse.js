@@ -11,6 +11,9 @@ const Browse = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchParams, setSearchParams] = useSearchParams();
+  const [error, setError] = useState('');
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [sellerRatings, setSellerRatings] = useState({});
 
   const categories = [
     { key: 'all', label: 'All Categories', icon: 'fas fa-th' },
