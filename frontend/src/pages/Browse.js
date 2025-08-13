@@ -96,14 +96,17 @@ const Browse = () => {
 
     try {
       setLoading(true);
+      setError('');
       const category = selectedCategory === 'all' ? undefined : selectedCategory;
       const data = await listingsAPI.search({
         q: searchQuery,
         category,
       });
       setListings(data);
+      loadSellerRatings(data);
     } catch (error) {
       console.error('Error searching listings:', error);
+      setError('Failed to search listings. Please try again.');
       setListings([]);
     } finally {
       setLoading(false);
