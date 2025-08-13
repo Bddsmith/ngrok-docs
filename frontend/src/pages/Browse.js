@@ -78,6 +78,16 @@ const Browse = () => {
     }
   };
 
+  const handleSearchResults = (results) => {
+    setListings(results);
+    loadSellerRatings(results);
+    setShowAdvancedSearch(false);
+  };
+
+  const handleAdvancedSearchClose = () => {
+    setShowAdvancedSearch(false);
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       loadListings();
