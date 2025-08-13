@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAdminAuth, getAdminUsername } from '../hooks/useAdminAuth';
-import { adminAPI, flagAPI } from '../services/api';
+import { adminAPI } from '../services/api';
 import './Admin.css';
 
 const Admin = () => {
@@ -334,280 +334,245 @@ const Admin = () => {
 
           {/* Listings Management Tab */}
           {activeTab === 'listings' && (
-            <ListingsManagement 
-              listings={listings}
-              onAction={handleListingAction}
-              onFilterChange={(filter) => {
-                setListingsFilter(filter);
-                loadListings();
-              }}
-              onSearchChange={(search) => {
-                setSearchTerm(search);
-                loadListings();
-              }}
-              currentFilter={listingsFilter}
-              searchTerm={searchTerm}
-            />
+            <div className="listings-tab">
+              <div className="listings-controls">
+                <div className="filter-controls">
+                  <select 
+                    value={listingsFilter} 
+                    onChange={(e) => {
+                      setListingsFilter(e.target.value);
+                      loadListings();
+                    }}
+                  >
+                    <option value="all">All Listings</option>
+                    <option value="active">Active Only</option>
+                    <option value="flagged">Flagged Only</option>
+                    <option value="inactive">Inactive Only</option>
+                  </select>
+                  <input 
+                    type="text" 
+                    placeholder="Search listings..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && loadListings()}
+                  />
+                  <button onClick={loadListings} className="search-btn">
+                    <i className="fas fa-search"></i>
+                  </button>
+                </div>
+                <button onClick={loadListings} className="refresh-btn">
+                  <i className="fas fa-refresh"></i>
+                  Refresh
+                </button>
+              </div>
+
+              <div className="listings-table-container">
+                <table className="listings-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Seller</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Status</th>
+                      <th>Flags</th>
+                      <th>Created</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {listings.map((listing) => (
+                      <tr key={listing._id} className={listing.flag_count > 0 ? 'flagged' : ''}>
+                        <td className="listing-title">{listing.title}</td>
+                        <td>{listing.seller_name || 'Unknown'}</td>
+                        <td>
+                          <span className={`category-badge ${listing.category}`}>
+                            {listing.category}
+                          </span>
+                        </td>
+                        <td>${listing.price}</td>
+                        <td>
+                          <span className={`status-badge ${listing.is_active ? 'active' : 'inactive'}`}>
+                            {listing.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td>
+                          {listing.flag_count > 0 && (
+                            <span className="flag-count">
+                              <i className="fas fa-flag"></i>
+                              {listing.flag_count}
+                              {listing.unreviewed_flags > 0 && (
+                                <span className="unreviewed">({listing.unreviewed_flags} new)</span>
+                              )}
+                            </span>
+                          )}
+                        </td>
+                        <td>{formatDate(listing.created_at)}</td>
+                        <td className="actions-cell">
+                          <div className="action-buttons">
+                            {listing.is_active ? (
+                              <button 
+                                onClick={() => handleListingAction(listing._id, 'deactivate', 'Admin deactivation')}
+                                className="action-btn deactivate"
+                                title="Deactivate"
+                              >
+                                <i className="fas fa-pause"></i>
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handleListingAction(listing._id, 'reactivate', 'Admin reactivation')}
+                                className="action-btn activate"
+                                title="Reactivate"
+                              >
+                                <i className="fas fa-play"></i>
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => handleListingAction(listing._id, 'delete', 'Admin deletion')}
+                              className="action-btn delete"
+                              title="Delete"
+                              onClick={(e) => {
+                                if (window.confirm('Are you sure you want to delete this listing?')) {
+                                  handleListingAction(listing._id, 'delete', 'Admin deletion');
+                                }
+                              }}
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                            {listing.flag_count > 0 && (
+                              <button 
+                                onClick={() => handleListingAction(listing._id, 'clear_flags', 'Admin reviewed - flags cleared')}
+                                className="action-btn clear-flags"
+                                title="Clear Flags"
+                              >
+                                <i className="fas fa-check"></i>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {listings.length === 0 && (
+                <div className="empty-state">
+                  <i className="fas fa-list"></i>
+                  <h3>No listings found</h3>
+                  <p>No listings match your current filters.</p>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Notifications Tab */}
           {activeTab === 'notifications' && (
-            <NotificationsTab 
-              notifications={notifications}
-              onMarkRead={markNotificationRead}
-              onRefresh={loadAdminData}
-            />
+            <div className="notifications-tab">
+              <div className="notifications-header">
+                <h2>📢 Admin Notifications</h2>
+                <button onClick={loadAdminData} className="refresh-btn">
+                  <i className="fas fa-refresh"></i>
+                  Refresh
+                </button>
+              </div>
+              
+              <div className="notifications-list">
+                {notifications.map((notification) => (
+                  <div 
+                    key={notification._id} 
+                    className={`notification-item ${notification.priority} ${notification.read ? 'read' : 'unread'}`}
+                  >
+                    <div className="notification-content">
+                      <div className="notification-header">
+                        <h4>{notification.title}</h4>
+                        <span className={`priority-badge ${notification.priority}`}>
+                          {notification.priority}
+                        </span>
+                      </div>
+                      <p>{notification.message}</p>
+                      <small>{formatDate(notification.created_at)}</small>
+                    </div>
+                    {!notification.read && (
+                      <button 
+                        onClick={() => markNotificationRead(notification._id)}
+                        className="mark-read-btn"
+                      >
+                        <i className="fas fa-check"></i>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {notifications.length === 0 && (
+                <div className="empty-state">
+                  <i className="fas fa-bell"></i>
+                  <h3>No notifications</h3>
+                  <p>All caught up! No notifications at the moment.</p>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Users Tab */}
           {activeTab === 'users' && (
-            <UsersTab users={users} formatDate={formatDate} />
+            <div className="users-tab">
+              <div className="users-header">
+                <h2>👥 User Management ({users.length} users)</h2>
+                <button onClick={loadAdminData} className="refresh-btn">
+                  <i className="fas fa-refresh"></i>
+                  Refresh
+                </button>
+              </div>
+
+              <div className="users-table-container">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Location</th>
+                      <th>Joined</th>
+                      <th>Listings</th>
+                      <th>Messages</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user._id}>
+                        <td className="user-name">
+                          <div className="user-avatar">
+                            <i className="fas fa-user"></i>
+                          </div>
+                          <span>{user.name}</span>
+                        </td>
+                        <td>{user.email}</td>
+                        <td>{user.phone}</td>
+                        <td>{user.location}</td>
+                        <td>{formatDate(user.created_at)}</td>
+                        <td>
+                          <span className="stat-badge">{user.listing_count}</span>
+                        </td>
+                        <td>
+                          <span className="stat-badge">{user.message_count}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {users.length === 0 && (
+                <div className="empty-state">
+                  <i className="fas fa-users"></i>
+                  <h3>No users found</h3>
+                  <p>No users have registered yet.</p>
+                </div>
+              )}
+            </div>
           )}
-        </div>
-      </div>
-    </div>
-  );
-};
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  // Show loading screen while checking authentication
-  if (authLoading) {
-    return (
-      <div className="admin-page">
-        <div className="container">
-          <div className="loading-section">
-            <div className="spinner"></div>
-            <p>Verifying admin access...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If not authenticated, the useAdminAuth hook will redirect to login
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  const renderOverview = () => (
-    <div className="admin-overview">
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <i className="fas fa-users"></i>
-          </div>
-          <div className="stat-content">
-            <h3>{stats?.total_users || 0}</h3>
-            <p>Total Users</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <i className="fas fa-list"></i>
-          </div>
-          <div className="stat-content">
-            <h3>{stats?.active_listings || 0}</h3>
-            <p>Active Listings</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <i className="fas fa-comments"></i>
-          </div>
-          <div className="stat-content">
-            <h3>{stats?.total_messages || 0}</h3>
-            <p>Total Messages</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <i className="fas fa-user-plus"></i>
-          </div>
-          <div className="stat-content">
-            <h3>{stats?.recent_users || 0}</h3>
-            <p>New Users (30 days)</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="category-stats">
-        <h3>Listings by Category</h3>
-        <div className="category-grid">
-          <div className="category-stat">
-            <span className="category-icon">🐔</span>
-            <div>
-              <h4>Poultry</h4>
-              <p>{stats?.listings_by_category?.poultry || 0} listings</p>
-            </div>
-          </div>
-          <div className="category-stat">
-            <span className="category-icon">🥚</span>
-            <div>
-              <h4>Fresh Eggs</h4>
-              <p>{stats?.listings_by_category?.eggs || 0} listings</p>
-            </div>
-          </div>
-          <div className="category-stat">
-            <span className="category-icon">🏠</span>
-            <div>
-              <h4>Coops</h4>
-              <p>{stats?.listings_by_category?.coop || 0} listings</p>
-            </div>
-          </div>
-          <div className="category-stat">
-            <span className="category-icon">🔲</span>
-            <div>
-              <h4>Cages</h4>
-              <p>{stats?.listings_by_category?.cage || 0} listings</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderUsers = () => (
-    <div className="users-section">
-      <div className="section-header">
-        <h3>All Registered Users ({users.length})</h3>
-        <button onClick={loadAdminData} className="refresh-btn">
-          <i className="fas fa-sync-alt"></i>
-          Refresh
-        </button>
-      </div>
-
-      <div className="users-table-container">
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Location</th>
-              <th>Joined</th>
-              <th>Listings</th>
-              <th>Messages</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user._id}>
-                <td className="user-name">
-                  <div className="user-avatar">
-                    <i className="fas fa-user"></i>
-                  </div>
-                  <span>{user.name}</span>
-                </td>
-                <td>{user.email}</td>
-                <td>{user.phone}</td>
-                <td>{user.location}</td>
-                <td>{formatDate(user.created_at)}</td>
-                <td>
-                  <span className="stat-badge">{user.listing_count}</span>
-                </td>
-                <td>
-                  <span className="stat-badge">{user.message_count}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {users.length === 0 && !loading && (
-        <div className="empty-state">
-          <i className="fas fa-users"></i>
-          <h3>No users found</h3>
-          <p>No users have registered yet.</p>
-        </div>
-      )}
-    </div>
-  );
-
-  if (loading) {
-    return (
-      <div className="admin-page">
-        <div className="container">
-          <div className="loading-section">
-            <div className="spinner"></div>
-            <p>Loading admin data...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="admin-page">
-        <div className="container">
-          <div className="error-section">
-            <i className="fas fa-exclamation-triangle"></i>
-            <h2>Error Loading Admin Data</h2>
-            <p>{error}</p>
-            <button onClick={loadAdminData} className="btn btn-primary">
-              <i className="fas fa-retry"></i>
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="admin-page">
-      <div className="admin-header">
-        <div className="container">
-          <div className="admin-title-section">
-            <h1 className="admin-title">
-              <i className="fas fa-cog"></i>
-              Admin Dashboard
-            </h1>
-            <p className="admin-subtitle">
-              Manage your Poultry Marketplace
-            </p>
-          </div>
-          <div className="admin-user-section">
-            <span className="admin-user-info">
-              <i className="fas fa-user-shield"></i>
-              Welcome, {getAdminUsername()}
-            </span>
-            <button onClick={logout} className="admin-logout-btn">
-              <i className="fas fa-sign-out-alt"></i>
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="container">
-        <div className="admin-tabs">
-          <button
-            className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            <i className="fas fa-chart-bar"></i>
-            Overview
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={() => setActiveTab('users')}
-          >
-            <i className="fas fa-users"></i>
-            Users ({users.length})
-          </button>
-        </div>
-
-        <div className="admin-content">
-          {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'users' && renderUsers()}
         </div>
       </div>
     </div>
