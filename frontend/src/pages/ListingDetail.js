@@ -406,6 +406,14 @@ const ListingDetail = () => {
                 </div>
               </div>
 
+              {/* Seller Reviews */}
+              {seller && sellerRating && sellerRating.total_ratings > 0 && (
+                <div className="seller-reviews">
+                  <h3>Seller Reviews</h3>
+                  <RatingsList sellerId={seller.id} limit={5} />
+                </div>
+              )}
+
               {isOwnListing && (
                 <div className="owner-actions">
                   <div className="alert alert-info">
