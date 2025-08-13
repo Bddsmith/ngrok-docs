@@ -193,7 +193,7 @@ const Browse = () => {
         <div className="container">
           <h1 className="page-title">Browse Listings</h1>
           <p className="page-subtitle">
-            Find the perfect poultry, coops, and cages from local sellers
+            Find the perfect poultry, fresh eggs, coops, and cages from local sellers
           </p>
         </div>
       </div>
