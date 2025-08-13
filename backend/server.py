@@ -413,7 +413,167 @@ async def get_user_conversations(user_id: str):
     
     return conversations
 
-# Admin - Get all users
+# Rating System Endpoints
+@api_router.post("/ratings", response_model=Rating)
+async def create_rating(rating_data: RatingCreate, buyer_id: str):
+    """Create a new rating for a seller"""
+    # Check if buyer has already rated this seller for this listing
+    existing_rating = await db.ratings.find_one({
+        "seller_id": rating_data.seller_id,
+        "buyer_id": buyer_id,
+        "listing_id": rating_data.listing_id
+    })
+    
+    if existing_rating:
+        raise HTTPException(status_code=400, detail="You have already rated this seller for this listing")
+    
+    # Verify the listing exists and get seller info
+    listing = await db.listings.find_one({"_id": ObjectId(rating_data.listing_id)})
+    if not listing or listing["user_id"] != rating_data.seller_id:
+        raise HTTPException(status_code=404, detail="Listing not found or seller mismatch")
+    
+    # Create the rating
+    rating_dict = rating_data.dict()
+    rating_dict['buyer_id'] = buyer_id
+    
+    result = await db.ratings.insert_one(rating_dict)
+    rating = await db.ratings.find_one({"_id": result.inserted_id})
+    return serialize_object_id(rating)
+
+@api_router.get("/sellers/{seller_id}/ratings", response_model=List[Rating])
+async def get_seller_ratings(seller_id: str, limit: int = 20, skip: int = 0):
+    """Get all ratings for a specific seller"""
+    cursor = db.ratings.find({"seller_id": seller_id}).sort("created_at", -1).limit(limit).skip(skip)
+    ratings = await cursor.to_list(length=limit)
+    return [serialize_object_id(rating) for rating in ratings]
+
+@api_router.get("/sellers/{seller_id}/rating-summary", response_model=RatingSummary)
+async def get_seller_rating_summary(seller_id: str):
+    """Get rating summary statistics for a seller"""
+    # Aggregate ratings for the seller
+    pipeline = [
+        {"$match": {"seller_id": seller_id}},
+        {"$group": {
+            "_id": "$seller_id",
+            "average_rating": {"$avg": "$rating"},
+            "total_ratings": {"$sum": 1},
+            "ratings": {"$push": "$rating"}
+        }}
+    ]
+    
+    result = await db.ratings.aggregate(pipeline).to_list(length=1)
+    
+    if not result:
+        return RatingSummary(
+            seller_id=seller_id,
+            average_rating=0.0,
+            total_ratings=0,
+            rating_breakdown={5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+        )
+    
+    data = result[0]
+    
+    # Calculate rating breakdown
+    rating_breakdown = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
+    for rating in data["ratings"]:
+        rating_breakdown[rating] += 1
+    
+    return RatingSummary(
+        seller_id=seller_id,
+        average_rating=round(data["average_rating"], 1),
+        total_ratings=data["total_ratings"],
+        rating_breakdown=rating_breakdown
+    )
+
+# Advanced Search Endpoint
+@api_router.post("/advanced-search", response_model=List[Listing])
+async def advanced_search(search_params: AdvancedSearchParams):
+    """Advanced search with multiple filters and sorting options"""
+    query = {"is_active": True}
+    
+    # Text search
+    if search_params.query:
+        query["$or"] = [
+            {"title": {"$regex": search_params.query, "$options": "i"}},
+            {"description": {"$regex": search_params.query, "$options": "i"}},
+            {"breed": {"$regex": search_params.query, "$options": "i"}},
+            {"egg_type": {"$regex": search_params.query, "$options": "i"}},
+            {"location": {"$regex": search_params.query, "$options": "i"}}
+        ]
+    
+    # Category filter
+    if search_params.category:
+        query["category"] = search_params.category
+    
+    # Price range filter
+    if search_params.min_price is not None or search_params.max_price is not None:
+        price_query = {}
+        if search_params.min_price is not None:
+            price_query["$gte"] = search_params.min_price
+        if search_params.max_price is not None:
+            price_query["$lte"] = search_params.max_price
+        query["price"] = price_query
+    
+    # Location filter
+    if search_params.location:
+        query["location"] = {"$regex": search_params.location, "$options": "i"}
+    
+    # Category-specific filters
+    if search_params.egg_type:
+        query["egg_type"] = {"$regex": search_params.egg_type, "$options": "i"}
+    
+    if search_params.feed_type:
+        query["feed_type"] = {"$regex": search_params.feed_type, "$options": "i"}
+    
+    if search_params.breed:
+        query["breed"] = {"$regex": search_params.breed, "$options": "i"}
+    
+    # Freshness filter for eggs (max days old)
+    if search_params.max_days_old and search_params.category == "eggs":
+        cutoff_date = datetime.utcnow() - timedelta(days=search_params.max_days_old)
+        query["laid_date"] = {"$gte": cutoff_date.isoformat()[:10]}
+    
+    # Sorting
+    sort_field = search_params.sort_by
+    sort_direction = -1 if search_params.sort_order == "desc" else 1
+    
+    # Handle special sorting cases
+    if sort_field == "rating":
+        # For rating sort, we'll need to do aggregation to join with ratings
+        pipeline = [
+            {"$match": query},
+            {
+                "$lookup": {
+                    "from": "ratings",
+                    "localField": "user_id",
+                    "foreignField": "seller_id",
+                    "as": "seller_ratings"
+                }
+            },
+            {
+                "$addFields": {
+                    "average_rating": {
+                        "$cond": {
+                            "if": {"$gt": [{"$size": "$seller_ratings"}, 0]},
+                            "then": {"$avg": "$seller_ratings.rating"},
+                            "else": 0
+                        }
+                    }
+                }
+            },
+            {"$sort": {"average_rating": sort_direction}},
+            {"$limit": search_params.limit},
+            {"$skip": search_params.skip}
+        ]
+        
+        cursor = db.listings.aggregate(pipeline)
+        listings = await cursor.to_list(length=search_params.limit)
+    else:
+        # Regular sorting
+        cursor = db.listings.find(query).sort(sort_field, sort_direction).limit(search_params.limit).skip(search_params.skip)
+        listings = await cursor.to_list(length=search_params.limit)
+    
+    return [serialize_object_id(listing) for listing in listings]
 @api_router.get("/admin/users", response_model=List[dict])
 async def get_all_users():
     cursor = db.users.find({}, {"password": 0})  # Exclude password field
