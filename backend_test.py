@@ -68,49 +68,201 @@ class PoultryAPITester:
             return False
     
     def test_user_registration(self):
-        """Test user registration endpoint"""
+        """Test user registration endpoint with comprehensive validation scenarios"""
         print("\n=== Testing User Registration ===")
+        
+        # Test 1: Valid user registration with complete data
+        print("\n--- Test 1: Valid Registration with Complete Data ---")
         try:
-            # Test first user registration
             response = self.session.post(
                 f"{API_BASE_URL}/auth/register",
                 json=self.test_user_data
             )
-            print(f"User 1 Registration - Status Code: {response.status_code}")
+            print(f"Valid Registration - Status Code: {response.status_code}")
             print(f"Response: {response.json()}")
             
             if response.status_code == 200:
                 data = response.json()
-                if "token" in data and "user_id" in data:
+                if "token" in data and "user_id" in data and "message" in data:
                     self.user_token = data["token"]
                     self.user_id = data["user_id"]
-                    print("✅ User 1 Registration: PASSED")
-                    
-                    # Test second user registration
-                    response2 = self.session.post(
-                        f"{API_BASE_URL}/auth/register",
-                        json=self.test_user_2_data
-                    )
-                    print(f"User 2 Registration - Status Code: {response2.status_code}")
-                    
-                    if response2.status_code == 200:
-                        data2 = response2.json()
-                        self.user_2_token = data2["token"]
-                        self.user_2_id = data2["user_id"]
-                        print("✅ User 2 Registration: PASSED")
-                        return True
-                    else:
-                        print(f"❌ User 2 Registration: Failed with status {response2.status_code}")
-                        return False
+                    print("✅ Valid Registration: PASSED")
+                    print(f"✅ Token generated: {data['token'][:20]}...")
+                    print(f"✅ User ID: {data['user_id']}")
                 else:
-                    print("❌ User Registration: Missing token or user_id in response")
+                    print("❌ Valid Registration: Missing required fields in response")
                     return False
             else:
-                print(f"❌ User Registration: Failed with status {response.status_code}")
+                print(f"❌ Valid Registration: Failed with status {response.status_code}")
+                if response.status_code != 200:
+                    try:
+                        error_data = response.json()
+                        print(f"Error details: {error_data}")
+                    except:
+                        print(f"Error response: {response.text}")
                 return False
         except Exception as e:
-            print(f"❌ User Registration: Exception - {str(e)}")
+            print(f"❌ Valid Registration: Exception - {str(e)}")
             return False
+        
+        # Test 2: Missing required fields validation
+        print("\n--- Test 2: Missing Required Fields Validation ---")
+        try:
+            # Test missing name
+            incomplete_data = self.test_user_data.copy()
+            del incomplete_data["name"]
+            
+            response = self.session.post(
+                f"{API_BASE_URL}/auth/register",
+                json=incomplete_data
+            )
+            print(f"Missing name - Status Code: {response.status_code}")
+            
+            if response.status_code == 422:  # FastAPI validation error
+                print("✅ Missing name validation: PASSED")
+            else:
+                print(f"❌ Missing name validation: Expected 422, got {response.status_code}")
+                return False
+            
+            # Test missing email
+            incomplete_data = self.test_user_data.copy()
+            del incomplete_data["email"]
+            
+            response = self.session.post(
+                f"{API_BASE_URL}/auth/register",
+                json=incomplete_data
+            )
+            print(f"Missing email - Status Code: {response.status_code}")
+            
+            if response.status_code == 422:
+                print("✅ Missing email validation: PASSED")
+            else:
+                print(f"❌ Missing email validation: Expected 422, got {response.status_code}")
+                return False
+            
+            # Test missing password
+            incomplete_data = self.test_user_data.copy()
+            del incomplete_data["password"]
+            
+            response = self.session.post(
+                f"{API_BASE_URL}/auth/register",
+                json=incomplete_data
+            )
+            print(f"Missing password - Status Code: {response.status_code}")
+            
+            if response.status_code == 422:
+                print("✅ Missing password validation: PASSED")
+            else:
+                print(f"❌ Missing password validation: Expected 422, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Missing fields validation: Exception - {str(e)}")
+            return False
+        
+        # Test 3: Invalid email format validation
+        print("\n--- Test 3: Invalid Email Format Validation ---")
+        try:
+            invalid_email_data = self.test_user_data.copy()
+            invalid_email_data["email"] = "invalid-email-format"
+            
+            response = self.session.post(
+                f"{API_BASE_URL}/auth/register",
+                json=invalid_email_data
+            )
+            print(f"Invalid email format - Status Code: {response.status_code}")
+            
+            if response.status_code == 422:
+                print("✅ Invalid email format validation: PASSED")
+            else:
+                print(f"❌ Invalid email format validation: Expected 422, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Invalid email validation: Exception - {str(e)}")
+            return False
+        
+        # Test 4: Duplicate email registration
+        print("\n--- Test 4: Duplicate Email Registration ---")
+        try:
+            # Try to register with the same email again
+            response = self.session.post(
+                f"{API_BASE_URL}/auth/register",
+                json=self.test_user_data
+            )
+            print(f"Duplicate email registration - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 400:
+                data = response.json()
+                if "detail" in data and "already registered" in data["detail"].lower():
+                    print("✅ Duplicate email prevention: PASSED")
+                else:
+                    print("❌ Duplicate email prevention: Wrong error message")
+                    return False
+            else:
+                print(f"❌ Duplicate email prevention: Expected 400, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Duplicate email validation: Exception - {str(e)}")
+            return False
+        
+        # Test 5: Register second user for other tests
+        print("\n--- Test 5: Second User Registration ---")
+        try:
+            response = self.session.post(
+                f"{API_BASE_URL}/auth/register",
+                json=self.test_user_2_data
+            )
+            print(f"Second user registration - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "token" in data and "user_id" in data:
+                    self.user_2_token = data["token"]
+                    self.user_2_id = data["user_id"]
+                    print("✅ Second user registration: PASSED")
+                else:
+                    print("❌ Second user registration: Missing required fields")
+                    return False
+            else:
+                print(f"❌ Second user registration: Failed with status {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Second user registration: Exception - {str(e)}")
+            return False
+        
+        # Test 6: Verify user can be retrieved after registration
+        print("\n--- Test 6: User Retrieval After Registration ---")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/users/{self.user_id}")
+            print(f"Get registered user - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                if (user_data.get("name") == self.test_user_data["name"] and
+                    user_data.get("email") == self.test_user_data["email"] and
+                    user_data.get("phone") == self.test_user_data["phone"] and
+                    user_data.get("location") == self.test_user_data["location"]):
+                    print("✅ User retrieval after registration: PASSED")
+                    print("✅ All user data stored correctly")
+                else:
+                    print("❌ User retrieval: Data mismatch")
+                    print(f"Expected name: {self.test_user_data['name']}, Got: {user_data.get('name')}")
+                    print(f"Expected email: {self.test_user_data['email']}, Got: {user_data.get('email')}")
+                    return False
+            else:
+                print(f"❌ User retrieval: Failed with status {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ User retrieval after registration: Exception - {str(e)}")
+            return False
+        
+        print("\n✅ USER REGISTRATION COMPREHENSIVE TESTING: ALL TESTS PASSED")
+        return True
     
     def test_user_login(self):
         """Test user login endpoint"""
