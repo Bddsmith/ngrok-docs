@@ -13,6 +13,7 @@ const Browse = () => {
   const categories = [
     { key: 'all', label: 'All Categories', icon: 'fas fa-th' },
     { key: 'poultry', label: 'Poultry', icon: 'fas fa-dove' },
+    { key: 'eggs', label: 'Fresh Eggs', icon: 'fas fa-egg' },
     { key: 'coop', label: 'Coops', icon: 'fas fa-home' },
     { key: 'cage', label: 'Cages', icon: 'fas fa-square' },
   ];
