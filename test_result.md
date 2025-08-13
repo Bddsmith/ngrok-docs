@@ -237,9 +237,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Advanced Search System"
-    - "Rating System"
-    - "Enhanced User Profile with Ratings"
+    - "Follow System Backend"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
