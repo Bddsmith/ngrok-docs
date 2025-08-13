@@ -1506,6 +1506,15 @@ class PoultryAPITester:
         test_results['enhanced_user_profile'] = self.test_enhanced_user_profile()
         test_results['advanced_search_with_ratings'] = self.test_advanced_search_with_ratings()
         
+        # Follow System tests
+        test_results['follow_user_functionality'] = self.test_follow_user_functionality()
+        test_results['unfollow_user_functionality'] = self.test_unfollow_user_functionality()
+        test_results['followers_following_lists'] = self.test_followers_following_lists()
+        test_results['follow_statistics'] = self.test_follow_statistics()
+        test_results['following_feed'] = self.test_following_feed()
+        test_results['follow_system_integration'] = self.test_follow_system_integration()
+        test_results['follow_system_edge_cases'] = self.test_follow_system_edge_cases()
+        
         # Print summary
         print("\n" + "=" * 60)
         print("🏁 TEST SUMMARY")
