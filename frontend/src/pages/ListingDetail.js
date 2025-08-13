@@ -363,6 +363,18 @@ const ListingDetail = () => {
                         <i className="fas fa-phone"></i>
                         {seller.phone}
                       </p>
+                      
+                      {/* Seller Rating Display */}
+                      {sellerRating && (
+                        <div className="seller-rating">
+                          <RatingDisplay 
+                            averageRating={sellerRating.average_rating}
+                            totalRatings={sellerRating.total_ratings}
+                            showBreakdown={sellerRating.total_ratings > 0}
+                            ratingBreakdown={sellerRating.rating_breakdown}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                   
