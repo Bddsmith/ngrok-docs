@@ -130,6 +130,51 @@ class MessageCreate(BaseModel):
     listing_id: str
     content: str
 
+class Rating(BaseModel):
+    id: Optional[str] = Field(default=None, alias="_id")
+    seller_id: str  # User being rated
+    buyer_id: str   # User giving the rating
+    listing_id: str # Listing related to the rating
+    rating: int = Field(ge=1, le=5)  # 1-5 star rating
+    review: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
+
+class RatingCreate(BaseModel):
+    seller_id: str
+    listing_id: str
+    rating: int = Field(ge=1, le=5)
+    review: Optional[str] = None
+
+class RatingSummary(BaseModel):
+    seller_id: str
+    average_rating: float
+    total_ratings: int
+    rating_breakdown: dict  # {5: count, 4: count, etc.}
+
+class AdvancedSearchParams(BaseModel):
+    query: Optional[str] = None
+    category: Optional[str] = None
+    min_price: Optional[float] = None
+    max_price: Optional[float] = None
+    location: Optional[str] = None
+    radius_miles: Optional[int] = None  # Search within X miles of location
+    # Eggs specific filters
+    egg_type: Optional[str] = None
+    feed_type: Optional[str] = None
+    max_days_old: Optional[int] = None  # Freshness filter for eggs
+    # Poultry specific filters
+    breed: Optional[str] = None
+    age_range: Optional[str] = None
+    # General filters
+    min_rating: Optional[float] = None
+    sort_by: Optional[str] = "created_at"  # created_at, price, rating, distance
+    sort_order: Optional[str] = "desc"  # asc, desc
+    limit: int = 20
+    skip: int = 0
+
 class Conversation(BaseModel):
     id: str
     listing_id: str
