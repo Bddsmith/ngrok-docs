@@ -941,7 +941,9 @@ async def flag_listing(listing_id: str, flag_data: FlagCreate, current_user_id: 
         "title": f"Listing Flagged: {listing['title'][:50]}...",
         "message": f"Listing flagged for: {flag_data.reason}",
         "related_id": listing_id,
-        "priority": "high" if flag_data.reason in ["scam", "suspicious"] else "normal"
+        "priority": "high" if flag_data.reason in ["scam", "suspicious"] else "normal",
+        "read": False,
+        "created_at": datetime.utcnow()
     }
     await db.admin_notifications.insert_one(notification_data)
     
