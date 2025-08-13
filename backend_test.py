@@ -575,6 +575,12 @@ class PoultryAPITester:
         test_results['search_functionality'] = self.test_search_functionality()
         test_results['messaging_system'] = self.test_messaging_system()
         
+        # Eggs functionality tests
+        test_results['eggs_category_support'] = self.test_eggs_category_support()
+        test_results['create_eggs_listing'] = self.test_create_eggs_listing()
+        test_results['eggs_listing_retrieval'] = self.test_eggs_listing_retrieval()
+        test_results['admin_stats_with_eggs'] = self.test_admin_stats_with_eggs()
+        
         # Print summary
         print("\n" + "=" * 60)
         print("🏁 TEST SUMMARY")
