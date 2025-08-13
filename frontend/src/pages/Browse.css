@@ -288,14 +288,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  color: #9ca3af;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 12px;
+  gap: 12px;
 }
 
-.listing-location {
+.listing-info-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.listing-location, .listing-date {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.listing-seller-rating {
+  flex-shrink: 0;
 }
 
 /* Mobile Responsive */
