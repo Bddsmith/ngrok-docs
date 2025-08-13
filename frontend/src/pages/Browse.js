@@ -197,7 +197,7 @@ const Browse = () => {
             <div className="listing-follow-btn">
               <FollowButton 
                 userId={listing.user_id}
-                userName="Seller"
+                userName={listing.user_name || "Seller"}
               />
             </div>
           </div>
