@@ -47,6 +47,13 @@ const Navbar = () => {
             >
               Browse
             </Link>
+            <Link 
+              to="/following-feed" 
+              className={`nav-link ${isActivePath('/following-feed') ? 'active' : ''}`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Following
+            </Link>
             {user && (
               <>
                 <Link 
