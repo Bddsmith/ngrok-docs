@@ -881,6 +881,16 @@ async def get_admin_stats():
     cage_count = await db.listings.count_documents({"category": "cage", "is_active": True})
     eggs_count = await db.listings.count_documents({"category": "eggs", "is_active": True})
     
+    # Admin notification counts
+    unread_notifications = await db.admin_notifications.count_documents({"read": False})
+    high_priority_notifications = await db.admin_notifications.count_documents({
+        "read": False, 
+        "priority": {"$in": ["high", "urgent"]}
+    })
+    
+    # Flagged listings count
+    unreviewed_flags = await db.listing_flags.count_documents({"reviewed": False})
+    
     return {
         "total_users": total_users,
         "active_listings": active_listings,
@@ -891,6 +901,11 @@ async def get_admin_stats():
             "coop": coop_count,
             "cage": cage_count,
             "eggs": eggs_count
+        },
+        "admin_alerts": {
+            "unread_notifications": unread_notifications,
+            "high_priority_notifications": high_priority_notifications,
+            "unreviewed_flags": unreviewed_flags
         }
     }
 
