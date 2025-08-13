@@ -236,7 +236,6 @@ class AdminListingAction(BaseModel):
         populate_by_name = True
 
 class AdminActionCreate(BaseModel):
-    listing_id: str
     action: str
     reason: str
     notes: Optional[str] = None
