@@ -770,6 +770,9 @@ async def get_following_feed(current_user_id: str, limit: int = 20, skip: int = 
                 listing_dict = serialize_object_id(listing)
                 listing_dict["seller_name"] = seller["name"]
                 listing_dict["seller_location"] = seller["location"]
+                # Ensure created_at is included
+                if "created_at" not in listing_dict:
+                    listing_dict["created_at"] = listing.get("created_at")
                 feed_items.append(listing_dict)
         except Exception:
             continue  # Skip listings with invalid user IDs
