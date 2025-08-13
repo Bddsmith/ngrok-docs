@@ -748,60 +748,33 @@ async def get_user_follow_stats(user_id: str, current_user_id: Optional[str] = N
 @api_router.get("/feed/following")
 async def get_following_feed(current_user_id: str, limit: int = 20, skip: int = 0):
     """Get recent listings from users you follow"""
-    # Get listings from followed users
-    pipeline = [
-        {"$match": {"follower_id": current_user_id}},
-        {"$lookup": {
-            "from": "listings",
-            "localField": "following_id",
-            "foreignField": "user_id",
-            "as": "listings"
-        }},
-        {"$unwind": "$listings"},
-        {"$match": {"listings.is_active": True}},
-        {"$addFields": {
-            "following_object_id": {"$toObjectId": "$following_id"}
-        }},
-        {"$lookup": {
-            "from": "users",
-            "localField": "following_object_id",
-            "foreignField": "_id",
-            "as": "seller_info"
-        }},
-        {"$unwind": "$seller_info"},
-        {"$project": {
-            "_id": "$listings._id",
-            "title": "$listings.title",
-            "description": "$listings.description",
-            "category": "$listings.category",
-            "price": "$listings.price",
-            "images": "$listings.images",
-            "location": "$listings.location",
-            "created_at": "$listings.created_at",
-            "user_id": "$listings.user_id",
-            # Include all listing fields
-            "breed": "$listings.breed",
-            "age": "$listings.age",
-            "health_status": "$listings.health_status",
-            "size": "$listings.size",
-            "material": "$listings.material",
-            "condition": "$listings.condition",
-            "egg_type": "$listings.egg_type",
-            "laid_date": "$listings.laid_date",
-            "feed_type": "$listings.feed_type",
-            "quantity_available": "$listings.quantity_available",
-            "farm_practices": "$listings.farm_practices",
-            # Add seller info for context
-            "seller_name": "$seller_info.name",
-            "seller_location": "$seller_info.location"
-        }},
-        {"$sort": {"created_at": -1}},
-        {"$skip": skip},
-        {"$limit": limit}
-    ]
+    # Get users that current user follows
+    follows = await db.follows.find({"follower_id": current_user_id}).to_list(length=1000)
+    following_user_ids = [follow["following_id"] for follow in follows]
     
-    feed_items = await db.follows.aggregate(pipeline).to_list(length=limit)
-    return [serialize_object_id(item) for item in feed_items]
+    if not following_user_ids:
+        return []  # User doesn't follow anyone
+    
+    # Get listings from followed users
+    listings = await db.listings.find({
+        "user_id": {"$in": following_user_ids},
+        "is_active": True
+    }).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich listings with seller information
+    feed_items = []
+    for listing in listings:
+        try:
+            seller = await db.users.find_one({"_id": ObjectId(listing["user_id"])})
+            if seller:
+                listing_dict = serialize_object_id(listing)
+                listing_dict["seller_name"] = seller["name"]
+                listing_dict["seller_location"] = seller["location"]
+                feed_items.append(listing_dict)
+        except Exception:
+            continue  # Skip listings with invalid user IDs
+    
+    return feed_items
 
 @api_router.get("/admin/users", response_model=List[dict])
 async def get_all_users():
