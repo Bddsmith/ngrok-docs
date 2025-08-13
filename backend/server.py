@@ -699,36 +699,29 @@ async def get_user_followers(user_id: str, limit: int = 20, skip: int = 0):
 @api_router.get("/users/{user_id}/following")
 async def get_user_following(user_id: str, limit: int = 20, skip: int = 0):
     """Get users this user is following"""
-    # Get following with user details
-    pipeline = [
-        {"$match": {"follower_id": user_id}},
-        {"$addFields": {
-            "following_object_id": {"$toObjectId": "$following_id"}
-        }},
-        {"$lookup": {
-            "from": "users",
-            "localField": "following_object_id",
-            "foreignField": "_id",
-            "as": "following_info"
-        }},
-        {"$unwind": "$following_info"},
-        {"$project": {
-            "_id": 1,
-            "created_at": 1,
-            "following": {
-                "_id": "$following_info._id",
-                "name": "$following_info.name",
-                "location": "$following_info.location",
-                "email": "$following_info.email"
-            }
-        }},
-        {"$sort": {"created_at": -1}},
-        {"$skip": skip},
-        {"$limit": limit}
-    ]
+    # Get follow relationships first
+    follows = await db.follows.find({"follower_id": user_id}).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
     
-    following = await db.follows.aggregate(pipeline).to_list(length=limit)
-    return [serialize_object_id(follow) for follow in following]
+    following = []
+    for follow in follows:
+        # Get following user details
+        try:
+            following_user = await db.users.find_one({"_id": ObjectId(follow["following_id"])})
+            if following_user:
+                following.append({
+                    "_id": str(follow["_id"]),
+                    "created_at": follow["created_at"],
+                    "following": {
+                        "_id": str(following_user["_id"]),
+                        "name": following_user["name"],
+                        "location": following_user["location"],
+                        "email": following_user["email"]
+                    }
+                })
+        except Exception:
+            continue  # Skip invalid following IDs
+    
+    return following
 
 @api_router.get("/users/{user_id}/follow-stats")
 async def get_user_follow_stats(user_id: str, current_user_id: Optional[str] = None):
