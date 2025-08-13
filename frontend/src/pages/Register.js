@@ -94,7 +94,10 @@ const Register = () => {
     const result = await register(userData);
     
     if (result.success) {
-      navigate('/');
+      // Add a small delay to ensure authentication state updates complete
+      setTimeout(() => {
+        navigate('/');
+      }, 500); // 500ms delay to allow state to propagate
     } else {
       // More specific error messages
       let errorMessage = result.error;
@@ -111,9 +114,10 @@ const Register = () => {
       }
       
       setError(errorMessage);
+      setIsLoading(false); // Only set loading false on error
     }
     
-    setIsLoading(false);
+    // Don't set loading false on success - let the redirect handle it
   };
 
   return (
