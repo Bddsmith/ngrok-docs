@@ -375,8 +375,19 @@
     padding: 24px 0;
   }
   
+  .admin-header .container {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  
   .admin-title {
     font-size: 1.5rem;
+  }
+  
+  .admin-user-section {
+    flex-direction: column;
+    gap: 12px;
   }
   
   .admin-tabs {
