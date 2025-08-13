@@ -376,6 +376,14 @@ const ListingDetail = () => {
                           />
                         </div>
                       )}
+                      
+                      {/* Follow Button */}
+                      <div className="seller-follow">
+                        <FollowButton 
+                          userId={seller.id}
+                          userName={seller.name}
+                        />
+                      </div>
                     </div>
                   </div>
                   
