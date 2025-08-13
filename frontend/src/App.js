@@ -32,6 +32,7 @@ function App() {
               <Route path="/messages" element={<Messages />} />
               <Route path="/chat/:listingId/:userId" element={<Chat />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/admin" element={<Admin />} />
             </Routes>
           </main>
