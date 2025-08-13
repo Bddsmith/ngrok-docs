@@ -127,6 +127,13 @@ const Admin = () => {
             </div>
           </div>
           <div className="category-stat">
+            <span className="category-icon">🥚</span>
+            <div>
+              <h4>Fresh Eggs</h4>
+              <p>{stats?.listings_by_category?.eggs || 0} listings</p>
+            </div>
+          </div>
+          <div className="category-stat">
             <span className="category-icon">🏠</span>
             <div>
               <h4>Coops</h4>
