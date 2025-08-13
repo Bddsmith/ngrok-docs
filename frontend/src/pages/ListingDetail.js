@@ -50,9 +50,23 @@ const ListingDetail = () => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric'
     });
+  };
+
+  const calculateFreshness = (laidDate) => {
+    if (!laidDate) return '';
+    
+    const today = new Date();
+    const collectionDate = new Date(laidDate);
+    const diffTime = Math.abs(today - collectionDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Fresh Today!';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays <= 7) return `${diffDays} days ago`;
+    return `${Math.ceil(diffDays / 7)} weeks ago`;
   };
 
   if (loading) {
