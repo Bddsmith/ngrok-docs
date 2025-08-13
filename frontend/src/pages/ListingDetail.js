@@ -23,6 +23,26 @@ const ListingDetail = () => {
     }
   }, [id]);
 
+  // Load seller rating when seller info is available
+  useEffect(() => {
+    if (seller?.id) {
+      loadSellerRating();
+    }
+  }, [seller]);
+
+  const loadSellerRating = async () => {
+    try {
+      const backendURL = process.env.REACT_APP_BACKEND_URL || '';
+      const response = await fetch(`${backendURL}/api/sellers/${seller.id}/rating-summary`);
+      if (response.ok) {
+        const ratingData = await response.json();
+        setSellerRating(ratingData);
+      }
+    } catch (error) {
+      console.error('Failed to load seller rating:', error);
+    }
+  };
+
   const loadListing = async () => {
     try {
       setLoading(true);
