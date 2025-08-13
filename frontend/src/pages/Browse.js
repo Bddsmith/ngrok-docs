@@ -215,6 +215,14 @@ const Browse = () => {
                 <i className="fas fa-search"></i>
                 Search
               </button>
+              <button 
+                onClick={() => setShowAdvancedSearch(true)}
+                className="advanced-search-button"
+                title="Advanced Search"
+              >
+                <i className="fas fa-sliders-h"></i>
+                Advanced
+              </button>
             </div>
           </div>
 
