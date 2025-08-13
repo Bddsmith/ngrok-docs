@@ -616,6 +616,195 @@ async def advanced_search(search_params: AdvancedSearchParams):
         listings = await cursor.to_list(length=search_params.limit)
     
     return [serialize_object_id(listing) for listing in listings]
+
+# Follow System Endpoints
+@api_router.post("/users/{user_id}/follow")
+async def follow_user(user_id: str, current_user_id: str):
+    """Follow a user"""
+    if user_id == current_user_id:
+        raise HTTPException(status_code=400, detail="You cannot follow yourself")
+    
+    # Check if user exists
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if already following
+    existing_follow = await db.follows.find_one({
+        "follower_id": current_user_id,
+        "following_id": user_id
+    })
+    
+    if existing_follow:
+        raise HTTPException(status_code=400, detail="Already following this user")
+    
+    # Create follow relationship
+    follow_data = {
+        "follower_id": current_user_id,
+        "following_id": user_id,
+        "created_at": datetime.utcnow()
+    }
+    
+    result = await db.follows.insert_one(follow_data)
+    follow = await db.follows.find_one({"_id": result.inserted_id})
+    return serialize_object_id(follow)
+
+@api_router.delete("/users/{user_id}/follow")
+async def unfollow_user(user_id: str, current_user_id: str):
+    """Unfollow a user"""
+    if user_id == current_user_id:
+        raise HTTPException(status_code=400, detail="You cannot unfollow yourself")
+    
+    # Remove follow relationship
+    result = await db.follows.delete_one({
+        "follower_id": current_user_id,
+        "following_id": user_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="You are not following this user")
+    
+    return {"message": "Successfully unfollowed user"}
+
+@api_router.get("/users/{user_id}/followers")
+async def get_user_followers(user_id: str, limit: int = 20, skip: int = 0):
+    """Get users following this user"""
+    # Get followers with user details
+    pipeline = [
+        {"$match": {"following_id": user_id}},
+        {"$lookup": {
+            "from": "users",
+            "localField": "follower_id",
+            "foreignField": "_id",
+            "as": "follower_info"
+        }},
+        {"$unwind": "$follower_info"},
+        {"$project": {
+            "_id": 1,
+            "created_at": 1,
+            "follower": {
+                "_id": "$follower_info._id",
+                "name": "$follower_info.name",
+                "location": "$follower_info.location",
+                "email": "$follower_info.email"
+            }
+        }},
+        {"$sort": {"created_at": -1}},
+        {"$skip": skip},
+        {"$limit": limit}
+    ]
+    
+    followers = await db.follows.aggregate(pipeline).to_list(length=limit)
+    return [serialize_object_id(follower) for follower in followers]
+
+@api_router.get("/users/{user_id}/following")
+async def get_user_following(user_id: str, limit: int = 20, skip: int = 0):
+    """Get users this user is following"""
+    # Get following with user details
+    pipeline = [
+        {"$match": {"follower_id": user_id}},
+        {"$lookup": {
+            "from": "users",
+            "localField": "following_id",
+            "foreignField": "_id",
+            "as": "following_info"
+        }},
+        {"$unwind": "$following_info"},
+        {"$project": {
+            "_id": 1,
+            "created_at": 1,
+            "following": {
+                "_id": "$following_info._id",
+                "name": "$following_info.name",
+                "location": "$following_info.location",
+                "email": "$following_info.email"
+            }
+        }},
+        {"$sort": {"created_at": -1}},
+        {"$skip": skip},
+        {"$limit": limit}
+    ]
+    
+    following = await db.follows.aggregate(pipeline).to_list(length=limit)
+    return [serialize_object_id(follow) for follow in following]
+
+@api_router.get("/users/{user_id}/follow-stats")
+async def get_user_follow_stats(user_id: str, current_user_id: Optional[str] = None):
+    """Get user's follow statistics"""
+    # Count followers and following
+    followers_count = await db.follows.count_documents({"following_id": user_id})
+    following_count = await db.follows.count_documents({"follower_id": user_id})
+    
+    is_following = None
+    if current_user_id:
+        follow_relationship = await db.follows.find_one({
+            "follower_id": current_user_id,
+            "following_id": user_id
+        })
+        is_following = follow_relationship is not None
+    
+    return FollowStats(
+        user_id=user_id,
+        followers_count=followers_count,
+        following_count=following_count,
+        is_following=is_following
+    )
+
+@api_router.get("/feed/following")
+async def get_following_feed(current_user_id: str, limit: int = 20, skip: int = 0):
+    """Get recent listings from users you follow"""
+    # Get listings from followed users
+    pipeline = [
+        {"$match": {"follower_id": current_user_id}},
+        {"$lookup": {
+            "from": "listings",
+            "localField": "following_id",
+            "foreignField": "user_id",
+            "as": "listings"
+        }},
+        {"$unwind": "$listings"},
+        {"$match": {"listings.is_active": True}},
+        {"$lookup": {
+            "from": "users",
+            "localField": "following_id",
+            "foreignField": "_id",
+            "as": "seller_info"
+        }},
+        {"$unwind": "$seller_info"},
+        {"$project": {
+            "_id": "$listings._id",
+            "title": "$listings.title",
+            "description": "$listings.description",
+            "category": "$listings.category",
+            "price": "$listings.price",
+            "images": "$listings.images",
+            "location": "$listings.location",
+            "created_at": "$listings.created_at",
+            "user_id": "$listings.user_id",
+            # Include all listing fields
+            "breed": "$listings.breed",
+            "age": "$listings.age",
+            "health_status": "$listings.health_status",
+            "size": "$listings.size",
+            "material": "$listings.material",
+            "condition": "$listings.condition",
+            "egg_type": "$listings.egg_type",
+            "laid_date": "$listings.laid_date",
+            "feed_type": "$listings.feed_type",
+            "quantity_available": "$listings.quantity_available",
+            "farm_practices": "$listings.farm_practices",
+            # Add seller info for context
+            "seller_name": "$seller_info.name",
+            "seller_location": "$seller_info.location"
+        }},
+        {"$sort": {"created_at": -1}},
+        {"$skip": skip},
+        {"$limit": limit}
+    ]
+    
+    feed_items = await db.follows.aggregate(pipeline).to_list(length=limit)
+    return [serialize_object_id(item) for item in feed_items]
+
 @api_router.get("/admin/users", response_model=List[dict])
 async def get_all_users():
     cursor = db.users.find({}, {"password": 0})  # Exclude password field
