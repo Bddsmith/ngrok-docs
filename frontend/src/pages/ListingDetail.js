@@ -14,6 +14,8 @@ const ListingDetail = () => {
   const [seller, setSeller] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showRatingForm, setShowRatingForm] = useState(false);
+  const [sellerRating, setSellerRating] = useState(null);
 
   useEffect(() => {
     if (id) {
