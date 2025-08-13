@@ -367,7 +367,7 @@ const CreateListing = () => {
           <div className="page-header">
             <h1 className="page-title">Create New Listing</h1>
             <p className="page-subtitle">
-              List your poultry, coops, or cages for sale
+              List your poultry, fresh eggs, coops, or cages for sale
             </p>
           </div>
 
