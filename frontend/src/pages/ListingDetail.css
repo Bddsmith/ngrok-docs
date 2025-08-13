@@ -219,27 +219,60 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.detail-item:last-child {
-  border-bottom: none;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
 }
 
 .detail-item i {
+  width: 20px;
+  text-align: center;
   color: #6b7280;
-  width: 16px;
 }
 
 .detail-label {
-  font-weight: 500;
+  font-weight: 600;
   color: #374151;
   min-width: 80px;
 }
 
 .detail-value {
   color: #111827;
+  flex: 1;
+}
+
+/* Health-focused highlighting for eggs */
+.freshness-highlight {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #a7f3d0;
+}
+
+.freshness-highlight i {
+  color: #10b981;
+}
+
+.freshness-indicator {
+  font-size: 0.875rem;
+  color: #059669;
+  font-weight: 600;
+}
+
+.health-highlight {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fcd34d;
+}
+
+.health-highlight i {
+  color: #d97706;
+}
+
+.certification-highlight {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  border: 1px solid #c4b5fd;
+}
+
+.certification-highlight i {
+  color: #7c3aed;
 }
 
 .seller-card {
