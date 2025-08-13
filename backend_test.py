@@ -42,6 +42,7 @@ class PoultryAPITester:
         self.user_2_token = None
         self.user_2_id = None
         self.test_listing_id = None
+        self.eggs_listing_id = None
         
     def test_api_health(self):
         """Test API health check endpoint"""
