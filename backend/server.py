@@ -894,6 +894,216 @@ async def get_admin_stats():
         }
     }
 
+# === Admin Listing Management Endpoints ===
+
+# Flag a listing (for users)
+@api_router.post("/listings/{listing_id}/flag")
+async def flag_listing(listing_id: str, flag_data: FlagCreate, current_user_id: str):
+    """Allow users to flag suspicious/inappropriate listings"""
+    # Check if listing exists
+    listing = await db.listings.find_one({"_id": ObjectId(listing_id)})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    # Check if user already flagged this listing
+    existing_flag = await db.listing_flags.find_one({
+        "listing_id": listing_id,
+        "flagger_id": current_user_id
+    })
+    if existing_flag:
+        raise HTTPException(status_code=400, detail="You have already flagged this listing")
+    
+    # Create flag
+    flag_dict = flag_data.dict()
+    flag_dict.update({
+        "listing_id": listing_id,
+        "flagger_id": current_user_id
+    })
+    
+    result = await db.listing_flags.insert_one(flag_dict)
+    
+    # Create admin notification
+    notification_data = {
+        "type": "flagged_listing",
+        "title": f"Listing Flagged: {listing['title'][:50]}...",
+        "message": f"Listing flagged for: {flag_data.reason}",
+        "related_id": listing_id,
+        "priority": "high" if flag_data.reason in ["scam", "suspicious"] else "normal"
+    }
+    await db.admin_notifications.insert_one(notification_data)
+    
+    return {"message": "Listing flagged successfully"}
+
+# Get all admin notifications
+@api_router.get("/admin/notifications")
+async def get_admin_notifications(unread_only: bool = False, limit: int = 50):
+    """Get admin notifications with priority items first"""
+    filter_query = {}
+    if unread_only:
+        filter_query["read"] = False
+    
+    notifications = await db.admin_notifications.find(filter_query).sort([
+        ("priority", -1), ("created_at", -1)
+    ]).limit(limit).to_list(length=limit)
+    
+    return [serialize_object_id(notification) for notification in notifications]
+
+# Mark notification as read
+@api_router.patch("/admin/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str):
+    """Mark admin notification as read"""
+    result = await db.admin_notifications.update_one(
+        {"_id": ObjectId(notification_id)},
+        {"$set": {"read": True}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return {"message": "Notification marked as read"}
+
+# Get all listings for admin with flag information
+@api_router.get("/admin/listings")
+async def get_admin_listings(
+    status: str = "all",  # "all", "active", "flagged", "inactive"
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 50,
+    skip: int = 0
+):
+    """Get all listings with admin information and flag status"""
+    
+    # Build query
+    query = {}
+    if status == "active":
+        query["is_active"] = True
+    elif status == "inactive":
+        query["is_active"] = False
+    elif status == "flagged":
+        # Get listing IDs that have been flagged
+        flagged_listings = await db.listing_flags.find({"reviewed": False}).to_list(length=1000)
+        flagged_listing_ids = [flag["listing_id"] for flag in flagged_listings]
+        query["_id"] = {"$in": [ObjectId(lid) for lid in flagged_listing_ids]}
+    
+    if category:
+        query["category"] = category
+    
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}},
+            {"location": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # Get listings
+    listings = await db.listings.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+    
+    # Enrich with seller info and flag information
+    enriched_listings = []
+    for listing in listings:
+        try:
+            listing_dict = serialize_object_id(listing)
+            
+            # Get seller information
+            seller = await db.users.find_one({"_id": ObjectId(listing["user_id"])})
+            if seller:
+                listing_dict["seller_name"] = seller["name"]
+                listing_dict["seller_email"] = seller["email"]
+            
+            # Get flag information
+            flags = await db.listing_flags.find({"listing_id": listing_dict["_id"]}).to_list(length=100)
+            listing_dict["flags"] = [serialize_object_id(flag) for flag in flags]
+            listing_dict["flag_count"] = len(flags)
+            listing_dict["unreviewed_flags"] = len([f for f in flags if not f.get("reviewed", False)])
+            
+            # Get admin actions history
+            actions = await db.admin_actions.find({"listing_id": listing_dict["_id"]}).sort("created_at", -1).to_list(length=10)
+            listing_dict["admin_actions"] = [serialize_object_id(action) for action in actions]
+            
+            enriched_listings.append(listing_dict)
+        except Exception:
+            continue
+    
+    return enriched_listings
+
+# Admin action on listing
+@api_router.post("/admin/listings/{listing_id}/action")
+async def admin_listing_action(listing_id: str, action_data: AdminActionCreate, admin_id: str = "admin"):
+    """Perform admin action on a listing"""
+    
+    # Check if listing exists
+    listing = await db.listings.find_one({"_id": ObjectId(listing_id)})
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
+    # Perform the action
+    if action_data.action == "deactivate":
+        await db.listings.update_one(
+            {"_id": ObjectId(listing_id)},
+            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        )
+    elif action_data.action == "reactivate":
+        await db.listings.update_one(
+            {"_id": ObjectId(listing_id)},
+            {"$set": {"is_active": True, "updated_at": datetime.utcnow()}}
+        )
+    elif action_data.action == "delete":
+        await db.listings.delete_one({"_id": ObjectId(listing_id)})
+    elif action_data.action == "clear_flags":
+        # Mark all flags for this listing as reviewed
+        await db.listing_flags.update_many(
+            {"listing_id": listing_id},
+            {"$set": {"reviewed": True, "reviewed_by": admin_id, "reviewed_at": datetime.utcnow(), "action_taken": "cleared"}}
+        )
+    
+    # Record the admin action
+    action_record = action_data.dict()
+    action_record.update({
+        "listing_id": listing_id,
+        "admin_id": admin_id
+    })
+    await db.admin_actions.insert_one(action_record)
+    
+    # Create success notification
+    notification_data = {
+        "type": "admin_action",
+        "title": f"Action Completed: {action_data.action.title()}",
+        "message": f"Listing '{listing['title'][:30]}...' has been {action_data.action}d",
+        "related_id": listing_id,
+        "priority": "normal"
+    }
+    await db.admin_notifications.insert_one(notification_data)
+    
+    return {"message": f"Listing {action_data.action}d successfully"}
+
+# Get flagged listings summary
+@api_router.get("/admin/flags/summary")
+async def get_flags_summary():
+    """Get summary of flagged listings for admin dashboard"""
+    
+    # Count unreviewed flags by reason
+    pipeline = [
+        {"$match": {"reviewed": False}},
+        {"$group": {
+            "_id": "$reason",
+            "count": {"$sum": 1}
+        }}
+    ]
+    flag_counts = await db.listing_flags.aggregate(pipeline).to_list(length=100)
+    
+    # Total unreviewed flags
+    total_unreviewed = sum(item["count"] for item in flag_counts)
+    
+    # Recent flagged listings (last 7 days)
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    recent_flags = await db.listing_flags.count_documents({
+        "created_at": {"$gte": week_ago}
+    })
+    
+    return {
+        "total_unreviewed_flags": total_unreviewed,
+        "flags_by_reason": {item["_id"]: item["count"] for item in flag_counts},
+        "recent_flags_this_week": recent_flags
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
