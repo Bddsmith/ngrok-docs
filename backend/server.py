@@ -175,6 +175,24 @@ class AdvancedSearchParams(BaseModel):
     limit: int = 20
     skip: int = 0
 
+class Follow(BaseModel):
+    id: Optional[str] = Field(default=None, alias="_id")
+    follower_id: str  # User who is following
+    following_id: str  # User being followed
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
+
+class FollowCreate(BaseModel):
+    following_id: str
+
+class FollowStats(BaseModel):
+    user_id: str
+    followers_count: int
+    following_count: int
+    is_following: Optional[bool] = None  # Whether current user is following this user
+
 class Conversation(BaseModel):
     id: str
     listing_id: str
