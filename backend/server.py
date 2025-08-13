@@ -709,9 +709,12 @@ async def get_user_following(user_id: str, limit: int = 20, skip: int = 0):
     # Get following with user details
     pipeline = [
         {"$match": {"follower_id": user_id}},
+        {"$addFields": {
+            "following_object_id": {"$toObjectId": "$following_id"}
+        }},
         {"$lookup": {
             "from": "users",
-            "localField": "following_id",
+            "localField": "following_object_id",
             "foreignField": "_id",
             "as": "following_info"
         }},
