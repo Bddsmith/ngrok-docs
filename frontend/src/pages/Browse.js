@@ -61,11 +61,17 @@ const Browse = () => {
   const loadListings = async () => {
     try {
       setLoading(true);
+      setError('');
       const category = selectedCategory === 'all' ? undefined : selectedCategory;
       const data = await listingsAPI.getAll(category);
       setListings(data);
+      
+      // Load seller ratings for the listings
+      loadSellerRatings(data);
+      
     } catch (error) {
       console.error('Error loading listings:', error);
+      setError('Failed to load listings. Please try again.');
       setListings([]);
     } finally {
       setLoading(false);
