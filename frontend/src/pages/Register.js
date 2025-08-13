@@ -265,23 +265,30 @@ const Register = () => {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className={`btn btn-secondary auth-submit ${isLoading ? 'loading' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <div className="spinner"></div>
-                Creating Account...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-user-plus"></i>
-                Create Account
-              </>
-            )}
-          </button>
+          <div className="form-submit-section">
+            <div className="submit-reminder">
+              <i className="fas fa-info-circle"></i>
+              Make sure all password requirements above are met before submitting
+            </div>
+            
+            <button
+              type="submit"
+              className={`btn btn-secondary auth-submit ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="spinner"></div>
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-user-plus"></i>
+                  Create Account
+                </>
+              )}
+            </button>
+          </div>
 
           <div className="auth-divider">
             <span>Already have an account?</span>
