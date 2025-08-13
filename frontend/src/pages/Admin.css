@@ -10,6 +10,17 @@
   margin-bottom: 40px;
 }
 
+.admin-header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.admin-title-section {
+  flex: 1;
+}
+
 .admin-title {
   font-size: 2rem;
   font-weight: bold;
@@ -22,6 +33,40 @@
 .admin-subtitle {
   font-size: 1.1rem;
   opacity: 0.9;
+  margin: 0;
+}
+
+.admin-user-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.admin-logout-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .admin-tabs {
