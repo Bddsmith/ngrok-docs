@@ -65,10 +65,6 @@
   font-size: 0.875rem;
   font-weight: 500;
 }
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
 .category-selector {
   display: grid;
