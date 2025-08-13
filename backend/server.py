@@ -971,10 +971,14 @@ async def get_admin_notifications(unread_only: bool = False, limit: int = 50):
 @api_router.patch("/admin/notifications/{notification_id}/read")
 async def mark_notification_read(notification_id: str):
     """Mark admin notification as read"""
-    result = await db.admin_notifications.update_one(
-        {"_id": ObjectId(notification_id)},
-        {"$set": {"read": True}}
-    )
+    try:
+        result = await db.admin_notifications.update_one(
+            {"_id": ObjectId(notification_id)},
+            {"$set": {"read": True}}
+        )
+    except Exception:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Notification not found")
     return {"message": "Notification marked as read"}
