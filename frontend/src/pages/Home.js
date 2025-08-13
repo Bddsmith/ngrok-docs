@@ -15,7 +15,7 @@ const Home = () => {
             Welcome to Poultry Marketplace
           </h1>
           <p className="hero-subtitle">
-            The premier destination for buying and selling poultry, coops, and cages. 
+            The premier destination for buying and selling poultry, coops, cages, and fresh local eggs. 
             Connect with local farmers and enthusiasts in your area.
           </p>
           <div className="hero-buttons">
