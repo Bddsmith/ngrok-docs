@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { listingsAPI, userAPI } from '../services/api';
 import { RatingDisplay, RatingForm, RatingsList } from '../components/RatingSystem';
+import { FollowButton } from '../components/FollowSystem';
 import './ListingDetail.css';
 
 const ListingDetail = () => {
