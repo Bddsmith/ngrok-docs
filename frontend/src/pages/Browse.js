@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { listingsAPI } from '../services/api';
+import AdvancedSearch from '../components/AdvancedSearch';
+import { RatingDisplay } from '../components/RatingSystem';
 import './Browse.css';
 
 const Browse = () => {
