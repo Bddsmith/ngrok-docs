@@ -908,6 +908,13 @@ class PoultryAPITester:
         test_results['eggs_listing_retrieval'] = self.test_eggs_listing_retrieval()
         test_results['admin_stats_with_eggs'] = self.test_admin_stats_with_eggs()
         
+        # Advanced Search and Rating System tests
+        test_results['advanced_search_system'] = self.test_advanced_search_system()
+        test_results['rating_system_creation'] = self.test_rating_system_creation()
+        test_results['rating_system_retrieval'] = self.test_rating_system_retrieval()
+        test_results['enhanced_user_profile'] = self.test_enhanced_user_profile()
+        test_results['advanced_search_with_ratings'] = self.test_advanced_search_with_ratings()
+        
         # Print summary
         print("\n" + "=" * 60)
         print("🏁 TEST SUMMARY")
