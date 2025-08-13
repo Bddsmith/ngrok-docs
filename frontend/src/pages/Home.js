@@ -55,6 +55,12 @@ const Home = () => {
               <p className="category-count">Chickens, Ducks, Geese & More</p>
             </Link>
             
+            <Link to="/browse?category=eggs" className="category-card">
+              <span className="category-icon">🥚</span>
+              <h3 className="category-name">Fresh Local Eggs</h3>
+              <p className="category-count">Farm Fresh, Organic & Free-Range</p>
+            </Link>
+            
             <Link to="/browse?category=coop" className="category-card">
               <span className="category-icon">🏠</span>
               <h3 className="category-name">Coops</h3>
