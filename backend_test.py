@@ -1473,6 +1473,485 @@ class PoultryAPITester:
         except Exception as e:
             print(f"❌ Follow System Edge Cases: Exception - {str(e)}")
             return False
+
+    # === ADMIN LISTING MANAGEMENT TESTS ===
+
+    def test_flag_listing_functionality(self):
+        """Test flagging listings for suspicious/inappropriate content"""
+        print("\n=== Testing Flag Listing Functionality ===")
+        if not self.test_listing_id or not self.user_2_id:
+            print("❌ Flag Listing: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Valid flag creation
+            flag_data = {
+                "reason": "suspicious",
+                "description": "This listing seems too good to be true, possible scam"
+            }
+            
+            response = self.session.post(
+                f"{API_BASE_URL}/listings/{self.test_listing_id}/flag?current_user_id={self.user_2_id}",
+                json=flag_data
+            )
+            print(f"Flag listing - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data and "flagged" in data["message"].lower():
+                    print("✅ Valid Flag Creation: PASSED")
+                    
+                    # Test 2: Prevent duplicate flags from same user
+                    response2 = self.session.post(
+                        f"{API_BASE_URL}/listings/{self.test_listing_id}/flag?current_user_id={self.user_2_id}",
+                        json=flag_data
+                    )
+                    print(f"Duplicate flag attempt - Status Code: {response2.status_code}")
+                    
+                    if response2.status_code == 400:
+                        print("✅ Duplicate Flag Prevention: PASSED")
+                        
+                        # Test 3: Flag non-existent listing
+                        response3 = self.session.post(
+                            f"{API_BASE_URL}/listings/nonexistent_listing_id/flag?current_user_id={self.user_2_id}",
+                            json=flag_data
+                        )
+                        print(f"Flag non-existent listing - Status Code: {response3.status_code}")
+                        
+                        if response3.status_code == 404:
+                            print("✅ Non-existent Listing Handling: PASSED")
+                            
+                            # Test 4: Different flag reasons
+                            flag_reasons = ["scam", "inappropriate", "fake", "other"]
+                            for reason in flag_reasons:
+                                test_flag = {
+                                    "reason": reason,
+                                    "description": f"Testing {reason} flag reason"
+                                }
+                                
+                                # Use different user to avoid duplicate prevention
+                                response4 = self.session.post(
+                                    f"{API_BASE_URL}/listings/{self.test_listing_id}/flag?current_user_id={self.user_id}",
+                                    json=test_flag
+                                )
+                                print(f"Flag with reason '{reason}' - Status Code: {response4.status_code}")
+                                
+                                if response4.status_code == 200:
+                                    print(f"✅ Flag Reason '{reason}': PASSED")
+                                    break  # Only test one to avoid too many flags
+                                else:
+                                    print(f"❌ Flag Listing: Reason '{reason}' failed with status {response4.status_code}")
+                                    return False
+                            
+                            print("✅ Flag Listing Functionality: PASSED")
+                            return True
+                        else:
+                            print(f"❌ Flag Listing: Non-existent listing test failed with status {response3.status_code}")
+                            return False
+                    else:
+                        print(f"❌ Flag Listing: Duplicate prevention failed with status {response2.status_code}")
+                        return False
+                else:
+                    print("❌ Flag Listing: Invalid response message")
+                    return False
+            else:
+                print(f"❌ Flag Listing: Valid flag failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Flag Listing Functionality: Exception - {str(e)}")
+            return False
+
+    def test_admin_notifications_system(self):
+        """Test admin notifications creation and management"""
+        print("\n=== Testing Admin Notifications System ===")
+        try:
+            # Test 1: Get admin notifications
+            response = self.session.get(f"{API_BASE_URL}/admin/notifications")
+            print(f"Get admin notifications - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                notifications = response.json()
+                if isinstance(notifications, list):
+                    print(f"Found {len(notifications)} admin notifications")
+                    
+                    # Verify notification structure if notifications exist
+                    if len(notifications) > 0:
+                        notification = notifications[0]
+                        required_fields = ["_id", "type", "title", "message", "priority", "read", "created_at"]
+                        missing_fields = [field for field in required_fields if field not in notification]
+                        
+                        if not missing_fields:
+                            print("✅ Notification Structure: PASSED")
+                            
+                            # Test 2: Mark notification as read
+                            notification_id = notification["_id"]
+                            response2 = self.session.patch(f"{API_BASE_URL}/admin/notifications/{notification_id}/read")
+                            print(f"Mark notification read - Status Code: {response2.status_code}")
+                            
+                            if response2.status_code == 200:
+                                data2 = response2.json()
+                                if "message" in data2 and "read" in data2["message"].lower():
+                                    print("✅ Mark Notification Read: PASSED")
+                                    
+                                    # Test 3: Get unread notifications only
+                                    response3 = self.session.get(f"{API_BASE_URL}/admin/notifications?unread_only=true")
+                                    print(f"Get unread notifications - Status Code: {response3.status_code}")
+                                    
+                                    if response3.status_code == 200:
+                                        unread_notifications = response3.json()
+                                        if isinstance(unread_notifications, list):
+                                            print(f"Found {len(unread_notifications)} unread notifications")
+                                            print("✅ Unread Notifications Filter: PASSED")
+                                            
+                                            # Test 4: Mark non-existent notification as read
+                                            response4 = self.session.patch(f"{API_BASE_URL}/admin/notifications/nonexistent_id/read")
+                                            print(f"Mark non-existent notification read - Status Code: {response4.status_code}")
+                                            
+                                            if response4.status_code == 404:
+                                                print("✅ Non-existent Notification Handling: PASSED")
+                                                print("✅ Admin Notifications System: PASSED")
+                                                return True
+                                            else:
+                                                print(f"❌ Admin Notifications: Non-existent test failed with status {response4.status_code}")
+                                                return False
+                                        else:
+                                            print("❌ Admin Notifications: Unread notifications response not a list")
+                                            return False
+                                    else:
+                                        print(f"❌ Admin Notifications: Unread filter failed with status {response3.status_code}")
+                                        return False
+                                else:
+                                    print("❌ Admin Notifications: Invalid mark read response")
+                                    return False
+                            else:
+                                print(f"❌ Admin Notifications: Mark read failed with status {response2.status_code}")
+                                return False
+                        else:
+                            print(f"❌ Admin Notifications: Missing required fields: {missing_fields}")
+                            return False
+                    else:
+                        print("✅ Admin Notifications System: PASSED (no notifications to test)")
+                        return True
+                else:
+                    print("❌ Admin Notifications: Response not a list")
+                    return False
+            else:
+                print(f"❌ Admin Notifications: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Admin Notifications System: Exception - {str(e)}")
+            return False
+
+    def test_admin_listings_management(self):
+        """Test admin listings endpoint with filtering and flag information"""
+        print("\n=== Testing Admin Listings Management ===")
+        try:
+            # Test 1: Get all listings for admin
+            response = self.session.get(f"{API_BASE_URL}/admin/listings")
+            print(f"Get admin listings - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                listings = response.json()
+                if isinstance(listings, list):
+                    print(f"Found {len(listings)} listings for admin")
+                    
+                    # Verify admin listing structure if listings exist
+                    if len(listings) > 0:
+                        listing = listings[0]
+                        required_fields = ["_id", "title", "description", "category", "price", "is_active", "flags", "flag_count", "unreviewed_flags"]
+                        missing_fields = [field for field in required_fields if field not in listing]
+                        
+                        if not missing_fields:
+                            print("✅ Admin Listing Structure: PASSED")
+                            
+                            # Test 2: Filter by status
+                            response2 = self.session.get(f"{API_BASE_URL}/admin/listings?status=active")
+                            print(f"Filter active listings - Status Code: {response2.status_code}")
+                            
+                            if response2.status_code == 200:
+                                active_listings = response2.json()
+                                if isinstance(active_listings, list):
+                                    print(f"Found {len(active_listings)} active listings")
+                                    print("✅ Active Listings Filter: PASSED")
+                                    
+                                    # Test 3: Filter by flagged status
+                                    response3 = self.session.get(f"{API_BASE_URL}/admin/listings?status=flagged")
+                                    print(f"Filter flagged listings - Status Code: {response3.status_code}")
+                                    
+                                    if response3.status_code == 200:
+                                        flagged_listings = response3.json()
+                                        if isinstance(flagged_listings, list):
+                                            print(f"Found {len(flagged_listings)} flagged listings")
+                                            print("✅ Flagged Listings Filter: PASSED")
+                                            
+                                            # Test 4: Search functionality
+                                            response4 = self.session.get(f"{API_BASE_URL}/admin/listings?search=chicken")
+                                            print(f"Search admin listings - Status Code: {response4.status_code}")
+                                            
+                                            if response4.status_code == 200:
+                                                search_results = response4.json()
+                                                if isinstance(search_results, list):
+                                                    print(f"Found {len(search_results)} search results")
+                                                    print("✅ Admin Listings Search: PASSED")
+                                                    print("✅ Admin Listings Management: PASSED")
+                                                    return True
+                                                else:
+                                                    print("❌ Admin Listings: Search results not a list")
+                                                    return False
+                                            else:
+                                                print(f"❌ Admin Listings: Search failed with status {response4.status_code}")
+                                                return False
+                                        else:
+                                            print("❌ Admin Listings: Flagged listings response not a list")
+                                            return False
+                                    else:
+                                        print(f"❌ Admin Listings: Flagged filter failed with status {response3.status_code}")
+                                        return False
+                                else:
+                                    print("❌ Admin Listings: Active listings response not a list")
+                                    return False
+                            else:
+                                print(f"❌ Admin Listings: Active filter failed with status {response2.status_code}")
+                                return False
+                        else:
+                            print(f"❌ Admin Listings: Missing required fields: {missing_fields}")
+                            return False
+                    else:
+                        print("✅ Admin Listings Management: PASSED (no listings to test)")
+                        return True
+                else:
+                    print("❌ Admin Listings: Response not a list")
+                    return False
+            else:
+                print(f"❌ Admin Listings: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Admin Listings Management: Exception - {str(e)}")
+            return False
+
+    def test_admin_listing_actions(self):
+        """Test admin actions on listings (deactivate, reactivate, clear flags)"""
+        print("\n=== Testing Admin Listing Actions ===")
+        if not self.test_listing_id:
+            print("❌ Admin Listing Actions: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Deactivate listing
+            action_data = {
+                "action": "deactivate",
+                "reason": "Flagged as suspicious",
+                "notes": "Multiple user reports received"
+            }
+            
+            response = self.session.post(
+                f"{API_BASE_URL}/admin/listings/{self.test_listing_id}/action?admin_id=test_admin",
+                json=action_data
+            )
+            print(f"Deactivate listing - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data and "deactivated" in data["message"].lower():
+                    print("✅ Deactivate Listing: PASSED")
+                    
+                    # Verify listing is deactivated
+                    verify_response = self.session.get(f"{API_BASE_URL}/listings/{self.test_listing_id}")
+                    if verify_response.status_code == 404:  # Should not be found in public listings
+                        print("✅ Listing Deactivation Verified: PASSED")
+                        
+                        # Test 2: Reactivate listing
+                        reactivate_data = {
+                            "action": "reactivate",
+                            "reason": "False alarm, listing is legitimate",
+                            "notes": "Verified with seller"
+                        }
+                        
+                        response2 = self.session.post(
+                            f"{API_BASE_URL}/admin/listings/{self.test_listing_id}/action?admin_id=test_admin",
+                            json=reactivate_data
+                        )
+                        print(f"Reactivate listing - Status Code: {response2.status_code}")
+                        
+                        if response2.status_code == 200:
+                            data2 = response2.json()
+                            if "message" in data2 and "reactivated" in data2["message"].lower():
+                                print("✅ Reactivate Listing: PASSED")
+                                
+                                # Test 3: Clear flags
+                                clear_flags_data = {
+                                    "action": "clear_flags",
+                                    "reason": "Flags reviewed and deemed invalid",
+                                    "notes": "All flags cleared after investigation"
+                                }
+                                
+                                response3 = self.session.post(
+                                    f"{API_BASE_URL}/admin/listings/{self.test_listing_id}/action?admin_id=test_admin",
+                                    json=clear_flags_data
+                                )
+                                print(f"Clear flags - Status Code: {response3.status_code}")
+                                
+                                if response3.status_code == 200:
+                                    data3 = response3.json()
+                                    if "message" in data3 and "clear_flags" in data3["message"].lower():
+                                        print("✅ Clear Flags: PASSED")
+                                        
+                                        # Test 4: Action on non-existent listing
+                                        response4 = self.session.post(
+                                            f"{API_BASE_URL}/admin/listings/nonexistent_listing_id/action?admin_id=test_admin",
+                                            json=action_data
+                                        )
+                                        print(f"Action on non-existent listing - Status Code: {response4.status_code}")
+                                        
+                                        if response4.status_code == 404:
+                                            print("✅ Non-existent Listing Action Handling: PASSED")
+                                            print("✅ Admin Listing Actions: PASSED")
+                                            return True
+                                        else:
+                                            print(f"❌ Admin Listing Actions: Non-existent test failed with status {response4.status_code}")
+                                            return False
+                                    else:
+                                        print("❌ Admin Listing Actions: Invalid clear flags response")
+                                        return False
+                                else:
+                                    print(f"❌ Admin Listing Actions: Clear flags failed with status {response3.status_code}")
+                                    return False
+                            else:
+                                print("❌ Admin Listing Actions: Invalid reactivate response")
+                                return False
+                        else:
+                            print(f"❌ Admin Listing Actions: Reactivate failed with status {response2.status_code}")
+                            return False
+                    else:
+                        print("❌ Admin Listing Actions: Listing deactivation not verified")
+                        return False
+                else:
+                    print("❌ Admin Listing Actions: Invalid deactivate response")
+                    return False
+            else:
+                print(f"❌ Admin Listing Actions: Deactivate failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Admin Listing Actions: Exception - {str(e)}")
+            return False
+
+    def test_admin_flags_summary(self):
+        """Test admin flags summary endpoint"""
+        print("\n=== Testing Admin Flags Summary ===")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/admin/flags/summary")
+            print(f"Get flags summary - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                summary = response.json()
+                
+                # Verify summary structure
+                required_fields = ["total_unreviewed_flags", "flags_by_reason", "recent_flags_this_week"]
+                missing_fields = [field for field in required_fields if field not in summary]
+                
+                if not missing_fields:
+                    print("✅ Flags Summary Structure: PASSED")
+                    
+                    # Verify data types
+                    if (isinstance(summary["total_unreviewed_flags"], int) and
+                        isinstance(summary["flags_by_reason"], dict) and
+                        isinstance(summary["recent_flags_this_week"], int)):
+                        print("✅ Flags Summary Data Types: PASSED")
+                        
+                        # Verify counts are non-negative
+                        if (summary["total_unreviewed_flags"] >= 0 and
+                            summary["recent_flags_this_week"] >= 0):
+                            print("✅ Flags Summary Counts: PASSED")
+                            print("✅ Admin Flags Summary: PASSED")
+                            return True
+                        else:
+                            print("❌ Admin Flags Summary: Invalid count values")
+                            return False
+                    else:
+                        print("❌ Admin Flags Summary: Invalid data types")
+                        return False
+                else:
+                    print(f"❌ Admin Flags Summary: Missing required fields: {missing_fields}")
+                    return False
+            else:
+                print(f"❌ Admin Flags Summary: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Admin Flags Summary: Exception - {str(e)}")
+            return False
+
+    def test_updated_admin_stats(self):
+        """Test updated admin stats with notification counts and alerts"""
+        print("\n=== Testing Updated Admin Stats ===")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/admin/stats")
+            print(f"Get updated admin stats - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                stats = response.json()
+                
+                # Verify basic stats structure (existing functionality)
+                basic_fields = ["total_users", "active_listings", "total_messages", "recent_users", "listings_by_category"]
+                missing_basic = [field for field in basic_fields if field not in stats]
+                
+                if not missing_basic:
+                    print("✅ Basic Admin Stats Structure: PASSED")
+                    
+                    # Verify new admin alerts section
+                    if "admin_alerts" in stats:
+                        admin_alerts = stats["admin_alerts"]
+                        alert_fields = ["unread_notifications", "high_priority_notifications", "unreviewed_flags"]
+                        missing_alerts = [field for field in alert_fields if field not in admin_alerts]
+                        
+                        if not missing_alerts:
+                            print("✅ Admin Alerts Structure: PASSED")
+                            
+                            # Verify data types
+                            if (isinstance(admin_alerts["unread_notifications"], int) and
+                                isinstance(admin_alerts["high_priority_notifications"], int) and
+                                isinstance(admin_alerts["unreviewed_flags"], int)):
+                                print("✅ Admin Alerts Data Types: PASSED")
+                                
+                                # Verify counts are non-negative
+                                if (admin_alerts["unread_notifications"] >= 0 and
+                                    admin_alerts["high_priority_notifications"] >= 0 and
+                                    admin_alerts["unreviewed_flags"] >= 0):
+                                    print("✅ Admin Alerts Counts: PASSED")
+                                    
+                                    # Verify eggs category is included in listings_by_category
+                                    if "eggs" in stats["listings_by_category"]:
+                                        print("✅ Eggs Category in Stats: PASSED")
+                                        print("✅ Updated Admin Stats: PASSED")
+                                        return True
+                                    else:
+                                        print("❌ Updated Admin Stats: Missing eggs category")
+                                        return False
+                                else:
+                                    print("❌ Updated Admin Stats: Invalid alert count values")
+                                    return False
+                            else:
+                                print("❌ Updated Admin Stats: Invalid admin alerts data types")
+                                return False
+                        else:
+                            print(f"❌ Updated Admin Stats: Missing admin alert fields: {missing_alerts}")
+                            return False
+                    else:
+                        print("❌ Updated Admin Stats: Missing admin_alerts section")
+                        return False
+                else:
+                    print(f"❌ Updated Admin Stats: Missing basic fields: {missing_basic}")
+                    return False
+            else:
+                print(f"❌ Updated Admin Stats: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Updated Admin Stats: Exception - {str(e)}")
+            return False
     
     def run_all_tests(self):
         """Run all backend API tests"""
