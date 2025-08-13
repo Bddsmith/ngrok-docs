@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { listingsAPI, userAPI } from '../services/api';
+import { RatingDisplay, RatingForm, RatingsList } from '../components/RatingSystem';
 import './ListingDetail.css';
 
 const ListingDetail = () => {
