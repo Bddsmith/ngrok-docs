@@ -35,6 +35,29 @@ const Browse = () => {
     loadListings();
   }, [selectedCategory]);
 
+  // Load seller ratings for all listings
+  const loadSellerRatings = async (listings) => {
+    const ratings = {};
+    const uniqueSellerIds = [...new Set(listings.map(listing => listing.user_id))];
+    
+    await Promise.all(
+      uniqueSellerIds.map(async (sellerId) => {
+        try {
+          const backendURL = process.env.REACT_APP_BACKEND_URL || '';
+          const response = await fetch(`${backendURL}/api/sellers/${sellerId}/rating-summary`);
+          if (response.ok) {
+            const ratingData = await response.json();
+            ratings[sellerId] = ratingData;
+          }
+        } catch (error) {
+          console.error(`Failed to load rating for seller ${sellerId}:`, error);
+        }
+      })
+    );
+    
+    setSellerRatings(ratings);
+  };
+
   const loadListings = async () => {
     try {
       setLoading(true);
