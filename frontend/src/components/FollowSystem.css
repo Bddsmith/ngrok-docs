@@ -1,0 +1,380 @@
+/* Follow Button Component */
+.follow-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.follow-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid;
+  white-space: nowrap;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.follow-btn.not-following {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.follow-btn.not-following:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.follow-btn.following {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.follow-btn.following:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.follow-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.follow-btn.loading {
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+  border-color: transparent;
+}
+
+.follow-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.follow-stats.compact {
+  justify-content: center;
+}
+
+.follow-stats.detailed {
+  justify-content: center;
+  padding: 8px 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 12px;
+}
+
+.followers-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.stat-item:hover {
+  color: #4f46e5;
+}
+
+.stat-number {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #111827;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-divider {
+  color: #d1d5db;
+  font-weight: bold;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Followers/Following Modal */
+.followers-modal,
+.following-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.followers-content,
+.following-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.followers-header,
+.following-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.followers-header h3,
+.following-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.followers-list,
+.following-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.follower-item,
+.following-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 32px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.2s ease;
+}
+
+.follower-item:hover,
+.following-item:hover {
+  background: #f9fafb;
+}
+
+.follower-item:last-child,
+.following-item:last-child {
+  border-bottom: none;
+}
+
+.follower-avatar,
+.following-avatar {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.follower-info,
+.following-info {
+  flex: 1;
+}
+
+.follower-info h4,
+.following-info h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.follower-location,
+.following-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 4px;
+}
+
+.follow-date {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.loading-state .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+.error-state {
+  color: #dc2626;
+}
+
+.error-state i {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  color: #d1d5db;
+}
+
+.empty-state p,
+.error-state p,
+.loading-state p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .followers-modal,
+  .following-modal {
+    padding: 10px;
+  }
+  
+  .followers-content,
+  .following-content {
+    max-height: 90vh;
+  }
+  
+  .followers-header,
+  .following-header {
+    padding: 20px 24px;
+  }
+  
+  .follower-item,
+  .following-item {
+    padding: 16px 24px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .follower-avatar,
+  .following-avatar {
+    align-self: center;
+  }
+  
+  .follower-info,
+  .following-info {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .follow-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .follow-stats.detailed {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .stat-divider {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .followers-header,
+  .following-header {
+    padding: 16px 20px;
+  }
+  
+  .follower-item,
+  .following-item {
+    padding: 12px 20px;
+  }
+  
+  .loading-state,
+  .error-state,
+  .empty-state {
+    padding: 40px 20px;
+  }
+}
