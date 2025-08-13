@@ -430,6 +430,16 @@ const ListingDetail = () => {
           </div>
         </div>
       </div>
+      
+      {/* Rating Form Modal */}
+      {showRatingForm && listing && (
+        <RatingForm 
+          sellerId={listing.user_id}
+          listingId={listing.id}
+          onRatingSubmitted={handleRatingSubmitted}
+          onCancel={handleRatingFormCancel}
+        />
+      )}
     </div>
   );
 };
