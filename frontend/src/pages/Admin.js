@@ -11,28 +11,11 @@ const Admin = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Show loading screen while checking authentication
-  if (authLoading) {
-    return (
-      <div className="admin-page">
-        <div className="container">
-          <div className="loading-section">
-            <div className="spinner"></div>
-            <p>Verifying admin access...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // If not authenticated, the useAdminAuth hook will redirect to login
-  if (!isAuthenticated) {
-    return null;
-  }
-
   useEffect(() => {
-    loadAdminData();
-  }, []);
+    if (isAuthenticated) {
+      loadAdminData();
+    }
+  }, [isAuthenticated]);
 
   const loadAdminData = async () => {
     try {
@@ -69,6 +52,25 @@ const Admin = () => {
       minute: '2-digit'
     });
   };
+
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className="admin-page">
+        <div className="container">
+          <div className="loading-section">
+            <div className="spinner"></div>
+            <p>Verifying admin access...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, the useAdminAuth hook will redirect to login
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const renderOverview = () => (
     <div className="admin-overview">
