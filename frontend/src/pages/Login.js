@@ -131,6 +131,16 @@ const Login = () => {
             <i className="fas fa-user-plus"></i>
             Create Account
           </Link>
+
+          <div className="admin-access-section">
+            <div className="admin-divider">
+              <span>Admin Access</span>
+            </div>
+            <Link to="/admin-login" className="btn btn-admin auth-link">
+              <i className="fas fa-shield-alt"></i>
+              Admin Login
+            </Link>
+          </div>
         </form>
       </div>
     </div>
