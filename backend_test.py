@@ -556,6 +556,332 @@ class PoultryAPITester:
         except Exception as e:
             print(f"❌ Messaging System: Exception - {str(e)}")
             return False
+
+    def test_advanced_search_system(self):
+        """Test advanced search endpoint with various filter combinations"""
+        print("\n=== Testing Advanced Search System ===")
+        try:
+            # Test 1: Basic text search with category filtering
+            search_data = {
+                "query": "fresh chicken eggs",
+                "category": "eggs",
+                "sort_by": "created_at",
+                "sort_order": "desc"
+            }
+            
+            response = self.session.post(f"{API_BASE_URL}/advanced-search", json=search_data)
+            print(f"Basic text + category search - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"Found {len(data)} results for basic search")
+                
+                # Test 2: Price range filtering
+                price_search = {
+                    "category": "eggs",
+                    "min_price": 5.00,
+                    "max_price": 15.00,
+                    "sort_by": "price",
+                    "sort_order": "asc"
+                }
+                
+                response2 = self.session.post(f"{API_BASE_URL}/advanced-search", json=price_search)
+                print(f"Price range search - Status Code: {response2.status_code}")
+                
+                if response2.status_code == 200:
+                    data2 = response2.json()
+                    print(f"Found {len(data2)} results for price range search")
+                    
+                    # Test 3: Category-specific filters for eggs
+                    eggs_search = {
+                        "category": "eggs",
+                        "egg_type": "Chicken",
+                        "feed_type": "Organic",
+                        "max_days_old": 7,
+                        "sort_by": "created_at",
+                        "sort_order": "desc"
+                    }
+                    
+                    response3 = self.session.post(f"{API_BASE_URL}/advanced-search", json=eggs_search)
+                    print(f"Eggs-specific filters - Status Code: {response3.status_code}")
+                    
+                    if response3.status_code == 200:
+                        data3 = response3.json()
+                        print(f"Found {len(data3)} results for eggs-specific search")
+                        
+                        # Test 4: Poultry-specific filters
+                        poultry_search = {
+                            "category": "poultry",
+                            "breed": "Rhode Island Red",
+                            "sort_by": "price",
+                            "sort_order": "desc"
+                        }
+                        
+                        response4 = self.session.post(f"{API_BASE_URL}/advanced-search", json=poultry_search)
+                        print(f"Poultry-specific filters - Status Code: {response4.status_code}")
+                        
+                        if response4.status_code == 200:
+                            data4 = response4.json()
+                            print(f"Found {len(data4)} results for poultry-specific search")
+                            
+                            # Test 5: Empty parameters
+                            empty_search = {}
+                            response5 = self.session.post(f"{API_BASE_URL}/advanced-search", json=empty_search)
+                            print(f"Empty parameters search - Status Code: {response5.status_code}")
+                            
+                            if response5.status_code == 200:
+                                data5 = response5.json()
+                                print(f"Found {len(data5)} results for empty search")
+                                print("✅ Advanced Search System: PASSED")
+                                return True
+                            else:
+                                print(f"❌ Advanced Search: Empty search failed with status {response5.status_code}")
+                                return False
+                        else:
+                            print(f"❌ Advanced Search: Poultry search failed with status {response4.status_code}")
+                            return False
+                    else:
+                        print(f"❌ Advanced Search: Eggs search failed with status {response3.status_code}")
+                        return False
+                else:
+                    print(f"❌ Advanced Search: Price search failed with status {response2.status_code}")
+                    return False
+            else:
+                print(f"❌ Advanced Search: Basic search failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Advanced Search System: Exception - {str(e)}")
+            return False
+
+    def test_rating_system_creation(self):
+        """Test creating ratings with POST /api/ratings"""
+        print("\n=== Testing Rating System Creation ===")
+        if not self.test_listing_id or not self.user_2_id:
+            print("❌ Rating System: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Create valid rating
+            rating_data = {
+                "seller_id": self.user_id,
+                "listing_id": self.test_listing_id,
+                "rating": 5,
+                "review": "Excellent seller, healthy chickens as promised!"
+            }
+            
+            response = self.session.post(
+                f"{API_BASE_URL}/ratings?buyer_id={self.user_2_id}",
+                json=rating_data
+            )
+            print(f"Create rating - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                rating_id = data.get("_id") or data.get("id")
+                if (rating_id and 
+                    data["seller_id"] == rating_data["seller_id"] and
+                    data["rating"] == rating_data["rating"] and
+                    data["review"] == rating_data["review"]):
+                    print("✅ Create Rating: PASSED")
+                    
+                    # Test 2: Prevent duplicate ratings
+                    response2 = self.session.post(
+                        f"{API_BASE_URL}/ratings?buyer_id={self.user_2_id}",
+                        json=rating_data
+                    )
+                    print(f"Duplicate rating attempt - Status Code: {response2.status_code}")
+                    
+                    if response2.status_code == 400:
+                        print("✅ Duplicate Rating Prevention: PASSED")
+                        
+                        # Test 3: Invalid seller/listing combination
+                        invalid_rating = {
+                            "seller_id": "invalid_seller_id",
+                            "listing_id": self.test_listing_id,
+                            "rating": 3,
+                            "review": "Test review"
+                        }
+                        
+                        response3 = self.session.post(
+                            f"{API_BASE_URL}/ratings?buyer_id={self.user_2_id}",
+                            json=invalid_rating
+                        )
+                        print(f"Invalid seller/listing - Status Code: {response3.status_code}")
+                        
+                        if response3.status_code == 404:
+                            print("✅ Invalid Seller/Listing Validation: PASSED")
+                            print("✅ Rating System Creation: PASSED")
+                            return True
+                        else:
+                            print(f"❌ Rating System: Invalid validation failed with status {response3.status_code}")
+                            return False
+                    else:
+                        print(f"❌ Rating System: Duplicate prevention failed with status {response2.status_code}")
+                        return False
+                else:
+                    print("❌ Rating System: Invalid rating data returned")
+                    return False
+            else:
+                print(f"❌ Rating System: Create rating failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Rating System Creation: Exception - {str(e)}")
+            return False
+
+    def test_rating_system_retrieval(self):
+        """Test retrieving seller ratings and rating summary"""
+        print("\n=== Testing Rating System Retrieval ===")
+        try:
+            # Test 1: Get seller ratings
+            response = self.session.get(f"{API_BASE_URL}/sellers/{self.user_id}/ratings")
+            print(f"Get seller ratings - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                ratings = response.json()
+                print(f"Found {len(ratings)} ratings for seller")
+                
+                if isinstance(ratings, list):
+                    print("✅ Get Seller Ratings: PASSED")
+                    
+                    # Test 2: Get rating summary
+                    response2 = self.session.get(f"{API_BASE_URL}/sellers/{self.user_id}/rating-summary")
+                    print(f"Get rating summary - Status Code: {response2.status_code}")
+                    print(f"Response: {response2.json()}")
+                    
+                    if response2.status_code == 200:
+                        summary = response2.json()
+                        
+                        # Verify summary structure
+                        required_fields = ["seller_id", "average_rating", "total_ratings", "rating_breakdown"]
+                        if all(field in summary for field in required_fields):
+                            print("✅ Rating Summary Structure: PASSED")
+                            
+                            # Verify rating breakdown structure
+                            breakdown = summary["rating_breakdown"]
+                            if isinstance(breakdown, dict) and all(str(i) in breakdown for i in range(1, 6)):
+                                print("✅ Rating Breakdown Structure: PASSED")
+                                
+                                # Test 3: Seller with no ratings
+                                response3 = self.session.get(f"{API_BASE_URL}/sellers/nonexistent_seller/rating-summary")
+                                print(f"No ratings summary - Status Code: {response3.status_code}")
+                                
+                                if response3.status_code == 200:
+                                    no_ratings_summary = response3.json()
+                                    if (no_ratings_summary["average_rating"] == 0.0 and 
+                                        no_ratings_summary["total_ratings"] == 0):
+                                        print("✅ No Ratings Summary: PASSED")
+                                        print("✅ Rating System Retrieval: PASSED")
+                                        return True
+                                    else:
+                                        print("❌ Rating System: No ratings summary incorrect")
+                                        return False
+                                else:
+                                    print(f"❌ Rating System: No ratings test failed with status {response3.status_code}")
+                                    return False
+                            else:
+                                print("❌ Rating System: Invalid rating breakdown structure")
+                                return False
+                        else:
+                            print(f"❌ Rating System: Missing required fields in summary: {required_fields}")
+                            return False
+                    else:
+                        print(f"❌ Rating System: Get summary failed with status {response2.status_code}")
+                        return False
+                else:
+                    print("❌ Rating System: Ratings response is not a list")
+                    return False
+            else:
+                print(f"❌ Rating System: Get ratings failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Rating System Retrieval: Exception - {str(e)}")
+            return False
+
+    def test_enhanced_user_profile(self):
+        """Test enhanced user profile with rating information"""
+        print("\n=== Testing Enhanced User Profile ===")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/users/{self.user_id}")
+            print(f"Get enhanced user profile - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                
+                # Verify seller rating information is included
+                if "seller_rating" in user_data:
+                    seller_rating = user_data["seller_rating"]
+                    
+                    # Check required fields
+                    if ("average_rating" in seller_rating and 
+                        "total_ratings" in seller_rating):
+                        print("✅ Seller Rating Fields: PASSED")
+                        
+                        # Verify data types
+                        if (isinstance(seller_rating["average_rating"], (int, float)) and
+                            isinstance(seller_rating["total_ratings"], int)):
+                            print("✅ Seller Rating Data Types: PASSED")
+                            print("✅ Enhanced User Profile: PASSED")
+                            return True
+                        else:
+                            print("❌ Enhanced User Profile: Invalid seller rating data types")
+                            return False
+                    else:
+                        print("❌ Enhanced User Profile: Missing seller rating fields")
+                        return False
+                else:
+                    print("❌ Enhanced User Profile: Missing seller_rating field")
+                    return False
+            else:
+                print(f"❌ Enhanced User Profile: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Enhanced User Profile: Exception - {str(e)}")
+            return False
+
+    def test_advanced_search_with_ratings(self):
+        """Test advanced search with rating filters"""
+        print("\n=== Testing Advanced Search with Rating Filters ===")
+        try:
+            # Test search with minimum rating filter
+            search_data = {
+                "min_rating": 4.0,
+                "sort_by": "rating",
+                "sort_order": "desc"
+            }
+            
+            response = self.session.post(f"{API_BASE_URL}/advanced-search", json=search_data)
+            print(f"Rating filter search - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"Found {len(data)} results for rating filter search")
+                
+                # Test sorting by rating
+                rating_sort_search = {
+                    "sort_by": "rating",
+                    "sort_order": "desc",
+                    "limit": 10
+                }
+                
+                response2 = self.session.post(f"{API_BASE_URL}/advanced-search", json=rating_sort_search)
+                print(f"Rating sort search - Status Code: {response2.status_code}")
+                
+                if response2.status_code == 200:
+                    data2 = response2.json()
+                    print(f"Found {len(data2)} results for rating sort search")
+                    print("✅ Advanced Search with Rating Filters: PASSED")
+                    return True
+                else:
+                    print(f"❌ Advanced Search: Rating sort failed with status {response2.status_code}")
+                    return False
+            else:
+                print(f"❌ Advanced Search: Rating filter failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Advanced Search with Rating Filters: Exception - {str(e)}")
+            return False
     
     def run_all_tests(self):
         """Run all backend API tests"""
