@@ -1,33 +1,240 @@
+/* Rustic Home Page Specific Styles */
+
 .home-page {
-  padding-top: 0;
+  width: 100%;
 }
 
+/* Enhanced Rustic Categories Section */
 .categories-section {
   padding: 80px 0;
-  background-color: #f9fafb;
+  background: linear-gradient(135deg, #faf0e6 0%, #f5f5dc 100%);
+  position: relative;
 }
 
-/* Additional responsive adjustments for home page */
+.categories-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 15px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 15"><path d="M0 8 Q25 0 50 8 T100 8 V15 H0 Z" fill="%23654321"/></svg>');
+  background-size: 100px 15px;
+  background-repeat: repeat-x;
+}
+
+.categories-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 15px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 15"><path d="M0 7 Q25 15 50 7 T100 7 V0 H0 Z" fill="%23654321"/></svg>');
+  background-size: 100px 15px;
+  background-repeat: repeat-x;
+}
+
+/* Enhanced Category Cards with Better Rustic Feel */
+.category-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 35px;
+  margin: 50px 0;
+  padding: 0 10px;
+}
+
+.category-card {
+  background: linear-gradient(145deg, #f5f5dc, #faf0e6);
+  border-radius: 25px;
+  padding: 40px 28px;
+  text-align: center;
+  text-decoration: none;
+  color: #2c1810;
+  border: 4px solid #d2691e;
+  box-shadow: 
+    0 12px 30px rgba(139, 69, 19, 0.2),
+    inset 0 2px 10px rgba(245, 245, 220, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.category-card::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: -100px;
+  width: calc(100% + 200px);
+  height: calc(100% + 200px);
+  background: 
+    radial-gradient(circle at 30% 70%, rgba(139, 69, 19, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, rgba(210, 105, 30, 0.03) 0%, transparent 50%);
+  transform: rotate(-45deg);
+  z-index: 1;
+}
+
+.category-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.category-card:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 
+    0 25px 45px rgba(139, 69, 19, 0.3),
+    inset 0 4px 15px rgba(245, 245, 220, 0.9);
+  border-color: #a0522d;
+  color: #2c1810;
+  text-decoration: none;
+}
+
+.category-icon {
+  font-size: 5rem;
+  margin-bottom: 25px;
+  display: block;
+  filter: drop-shadow(4px 4px 8px rgba(139, 69, 19, 0.3));
+  transition: all 0.3s ease;
+}
+
+.category-card:hover .category-icon {
+  transform: scale(1.1) rotate(5deg);
+  filter: drop-shadow(6px 6px 12px rgba(139, 69, 19, 0.4));
+}
+
+.category-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  font-family: 'Fredoka One', cursive;
+  text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.1);
+}
+
+.category-count {
+  color: #8b4513;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(139, 69, 19, 0.1);
+}
+
+/* Special Styling for Fresh Local Eggs Category */
+.category-card:nth-child(2) {
+  background: linear-gradient(145deg, #ffffe0, #fffacd);
+  border-color: #ffd700;
+  position: relative;
+}
+
+.category-card:nth-child(2)::after {
+  content: '🌟 FEATURED';
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: linear-gradient(45deg, #ffd700, #ffed4a);
+  color: #8b4513;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 8px rgba(255, 215, 0, 0.3);
+  z-index: 3;
+}
+
+.category-card:nth-child(2):hover {
+  border-color: #daa520;
+  box-shadow: 
+    0 25px 45px rgba(255, 215, 0, 0.4),
+    inset 0 4px 15px rgba(255, 255, 224, 0.9);
+}
+
+/* Rustic Features Section Enhancement */
+.features-section .page-title {
+  color: #f5f5dc;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+}
+
+.features-section .page-subtitle {
+  color: rgba(245, 245, 220, 0.9);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Feature Cards */
+.feature-card {
+  backdrop-filter: blur(15px);
+  border: 3px solid rgba(210, 105, 30, 0.6);
+}
+
+.feature-card:hover {
+  border-color: rgba(160, 82, 45, 0.8);
+}
+
+/* Enhanced CTA Section Styling */
+.cta-section .hero-buttons .hero-btn {
+  font-size: 18px;
+  padding: 20px 40px;
+}
+
+.cta-section .hero-btn-primary {
+  background: linear-gradient(145deg, #ffd700, #ffed4a);
+  color: #8b4513;
+  border: 3px solid #daa520;
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+  font-weight: 700;
+}
+
+.cta-section .hero-btn-primary:hover {
+  background: linear-gradient(145deg, #ffed4a, #ffd700);
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(255, 215, 0, 0.4);
+}
+
+/* Responsive Design Enhancements */
 @media (max-width: 768px) {
   .categories-section {
     padding: 60px 0;
   }
   
   .category-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin: 40px 0;
+  }
+  
+  .category-card {
+    padding: 30px 20px;
+  }
+  
+  .category-icon {
+    font-size: 3.5rem;
+  }
+  
+  .category-name {
+    font-size: 1.3rem;
+  }
+  
+  .category-count {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-cards {
     grid-template-columns: 1fr;
     gap: 20px;
   }
   
   .category-card {
-    padding: 24px 20px;
+    padding: 25px 16px;
   }
   
   .category-icon {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
+    font-size: 3rem;
   }
   
-  .category-name {
-    font-size: 1.1rem;
+  .categories-section::before,
+  .categories-section::after {
+    height: 10px;
+    background-size: 50px 10px;
   }
 }
