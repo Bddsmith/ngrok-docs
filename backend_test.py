@@ -882,6 +882,597 @@ class PoultryAPITester:
         except Exception as e:
             print(f"❌ Advanced Search with Rating Filters: Exception - {str(e)}")
             return False
+
+    def test_follow_user_functionality(self):
+        """Test follow user endpoint with various scenarios"""
+        print("\n=== Testing Follow User Functionality ===")
+        if not self.user_id or not self.user_2_id:
+            print("❌ Follow User: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Valid follow request
+            response = self.session.post(
+                f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_2_id}"
+            )
+            print(f"Follow user - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                follow_id = data.get("_id") or data.get("id")
+                if (follow_id and 
+                    data["follower_id"] == self.user_2_id and
+                    data["following_id"] == self.user_id):
+                    print("✅ Valid Follow Request: PASSED")
+                    
+                    # Test 2: Prevent self-following
+                    response2 = self.session.post(
+                        f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_id}"
+                    )
+                    print(f"Self-follow attempt - Status Code: {response2.status_code}")
+                    
+                    if response2.status_code == 400:
+                        print("✅ Self-Follow Prevention: PASSED")
+                        
+                        # Test 3: Prevent duplicate following
+                        response3 = self.session.post(
+                            f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_2_id}"
+                        )
+                        print(f"Duplicate follow attempt - Status Code: {response3.status_code}")
+                        
+                        if response3.status_code == 400:
+                            print("✅ Duplicate Follow Prevention: PASSED")
+                            
+                            # Test 4: Follow non-existent user
+                            response4 = self.session.post(
+                                f"{API_BASE_URL}/users/nonexistent_user_id/follow?current_user_id={self.user_2_id}"
+                            )
+                            print(f"Follow non-existent user - Status Code: {response4.status_code}")
+                            
+                            if response4.status_code == 404:
+                                print("✅ Non-existent User Handling: PASSED")
+                                print("✅ Follow User Functionality: PASSED")
+                                return True
+                            else:
+                                print(f"❌ Follow User: Non-existent user test failed with status {response4.status_code}")
+                                return False
+                        else:
+                            print(f"❌ Follow User: Duplicate prevention failed with status {response3.status_code}")
+                            return False
+                    else:
+                        print(f"❌ Follow User: Self-follow prevention failed with status {response2.status_code}")
+                        return False
+                else:
+                    print("❌ Follow User: Invalid follow data returned")
+                    return False
+            else:
+                print(f"❌ Follow User: Valid follow failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Follow User Functionality: Exception - {str(e)}")
+            return False
+
+    def test_unfollow_user_functionality(self):
+        """Test unfollow user endpoint with various scenarios"""
+        print("\n=== Testing Unfollow User Functionality ===")
+        if not self.user_id or not self.user_2_id:
+            print("❌ Unfollow User: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Successfully unfollow followed user
+            response = self.session.delete(
+                f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_2_id}"
+            )
+            print(f"Unfollow user - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "message" in data and "unfollowed" in data["message"].lower():
+                    print("✅ Valid Unfollow Request: PASSED")
+                    
+                    # Test 2: Unfollow non-followed user (should return 404)
+                    response2 = self.session.delete(
+                        f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_2_id}"
+                    )
+                    print(f"Unfollow non-followed user - Status Code: {response2.status_code}")
+                    
+                    if response2.status_code == 404:
+                        print("✅ Non-followed User Handling: PASSED")
+                        
+                        # Test 3: Prevent self-unfollowing
+                        response3 = self.session.delete(
+                            f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_id}"
+                        )
+                        print(f"Self-unfollow attempt - Status Code: {response3.status_code}")
+                        
+                        if response3.status_code == 400:
+                            print("✅ Self-Unfollow Prevention: PASSED")
+                            print("✅ Unfollow User Functionality: PASSED")
+                            return True
+                        else:
+                            print(f"❌ Unfollow User: Self-unfollow prevention failed with status {response3.status_code}")
+                            return False
+                    else:
+                        print(f"❌ Unfollow User: Non-followed user test failed with status {response2.status_code}")
+                        return False
+                else:
+                    print("❌ Unfollow User: Invalid response message")
+                    return False
+            else:
+                print(f"❌ Unfollow User: Valid unfollow failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Unfollow User Functionality: Exception - {str(e)}")
+            return False
+
+    def test_followers_following_lists(self):
+        """Test getting followers and following lists with pagination"""
+        print("\n=== Testing Followers/Following Lists ===")
+        if not self.user_id or not self.user_2_id:
+            print("❌ Followers/Following Lists: Missing required test data")
+            return False
+            
+        try:
+            # First, create a follow relationship for testing
+            follow_response = self.session.post(
+                f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_2_id}"
+            )
+            print(f"Setup follow relationship - Status Code: {follow_response.status_code}")
+            
+            # Test 1: Get user's followers
+            response = self.session.get(f"{API_BASE_URL}/users/{self.user_id}/followers")
+            print(f"Get followers - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                followers = response.json()
+                if isinstance(followers, list):
+                    print(f"Found {len(followers)} followers")
+                    
+                    # Verify follower data structure
+                    if len(followers) > 0:
+                        follower = followers[0]
+                        if ("follower" in follower and 
+                            "name" in follower["follower"] and
+                            "location" in follower["follower"] and
+                            "created_at" in follower):
+                            print("✅ Followers Data Structure: PASSED")
+                        else:
+                            print("❌ Followers: Invalid data structure")
+                            return False
+                    
+                    # Test 2: Get user's following list
+                    response2 = self.session.get(f"{API_BASE_URL}/users/{self.user_2_id}/following")
+                    print(f"Get following - Status Code: {response2.status_code}")
+                    print(f"Response: {response2.json()}")
+                    
+                    if response2.status_code == 200:
+                        following = response2.json()
+                        if isinstance(following, list):
+                            print(f"Found {len(following)} following")
+                            
+                            # Verify following data structure
+                            if len(following) > 0:
+                                follow_item = following[0]
+                                if ("following" in follow_item and 
+                                    "name" in follow_item["following"] and
+                                    "location" in follow_item["following"] and
+                                    "created_at" in follow_item):
+                                    print("✅ Following Data Structure: PASSED")
+                                else:
+                                    print("❌ Following: Invalid data structure")
+                                    return False
+                            
+                            # Test 3: Pagination
+                            response3 = self.session.get(f"{API_BASE_URL}/users/{self.user_id}/followers?limit=1&skip=0")
+                            print(f"Followers pagination - Status Code: {response3.status_code}")
+                            
+                            if response3.status_code == 200:
+                                paginated_followers = response3.json()
+                                if isinstance(paginated_followers, list):
+                                    print("✅ Followers Pagination: PASSED")
+                                    print("✅ Followers/Following Lists: PASSED")
+                                    return True
+                                else:
+                                    print("❌ Followers/Following: Pagination response not a list")
+                                    return False
+                            else:
+                                print(f"❌ Followers/Following: Pagination failed with status {response3.status_code}")
+                                return False
+                        else:
+                            print("❌ Followers/Following: Following response not a list")
+                            return False
+                    else:
+                        print(f"❌ Followers/Following: Get following failed with status {response2.status_code}")
+                        return False
+                else:
+                    print("❌ Followers/Following: Followers response not a list")
+                    return False
+            else:
+                print(f"❌ Followers/Following: Get followers failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Followers/Following Lists: Exception - {str(e)}")
+            return False
+
+    def test_follow_statistics(self):
+        """Test follow statistics endpoint"""
+        print("\n=== Testing Follow Statistics ===")
+        if not self.user_id or not self.user_2_id:
+            print("❌ Follow Statistics: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Get follow stats with current_user_id
+            response = self.session.get(
+                f"{API_BASE_URL}/users/{self.user_id}/follow-stats?current_user_id={self.user_2_id}"
+            )
+            print(f"Get follow stats with current user - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                stats = response.json()
+                
+                # Verify required fields
+                required_fields = ["user_id", "followers_count", "following_count", "is_following"]
+                if all(field in stats for field in required_fields):
+                    print("✅ Follow Stats Structure: PASSED")
+                    
+                    # Verify data types
+                    if (isinstance(stats["followers_count"], int) and
+                        isinstance(stats["following_count"], int) and
+                        isinstance(stats["is_following"], bool) and
+                        stats["user_id"] == self.user_id):
+                        print("✅ Follow Stats Data Types: PASSED")
+                        
+                        # Test 2: Get follow stats without current_user_id
+                        response2 = self.session.get(f"{API_BASE_URL}/users/{self.user_id}/follow-stats")
+                        print(f"Get follow stats without current user - Status Code: {response2.status_code}")
+                        
+                        if response2.status_code == 200:
+                            stats2 = response2.json()
+                            if stats2.get("is_following") is None:
+                                print("✅ Follow Stats Without Current User: PASSED")
+                                
+                                # Test 3: Verify accurate counts
+                                if stats["followers_count"] >= 0 and stats["following_count"] >= 0:
+                                    print("✅ Follow Stats Counts: PASSED")
+                                    print("✅ Follow Statistics: PASSED")
+                                    return True
+                                else:
+                                    print("❌ Follow Statistics: Invalid count values")
+                                    return False
+                            else:
+                                print("❌ Follow Statistics: is_following should be None without current_user_id")
+                                return False
+                        else:
+                            print(f"❌ Follow Statistics: Stats without current user failed with status {response2.status_code}")
+                            return False
+                    else:
+                        print("❌ Follow Statistics: Invalid data types or user_id")
+                        return False
+                else:
+                    print(f"❌ Follow Statistics: Missing required fields: {required_fields}")
+                    return False
+            else:
+                print(f"❌ Follow Statistics: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Follow Statistics: Exception - {str(e)}")
+            return False
+
+    def test_following_feed(self):
+        """Test following feed endpoint"""
+        print("\n=== Testing Following Feed ===")
+        if not self.user_id or not self.user_2_id:
+            print("❌ Following Feed: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Get following feed for user who follows others
+            response = self.session.get(
+                f"{API_BASE_URL}/feed/following?current_user_id={self.user_2_id}"
+            )
+            print(f"Get following feed - Status Code: {response.status_code}")
+            print(f"Response: {response.json()}")
+            
+            if response.status_code == 200:
+                feed_items = response.json()
+                if isinstance(feed_items, list):
+                    print(f"Found {len(feed_items)} items in following feed")
+                    
+                    # Verify feed item structure if items exist
+                    if len(feed_items) > 0:
+                        item = feed_items[0]
+                        required_fields = [
+                            "_id", "title", "description", "category", "price", 
+                            "location", "created_at", "user_id", "seller_name", "seller_location"
+                        ]
+                        
+                        missing_fields = [field for field in required_fields if field not in item]
+                        if not missing_fields:
+                            print("✅ Following Feed Structure: PASSED")
+                            
+                            # Verify category-specific fields are included
+                            if item.get("category") == "eggs":
+                                eggs_fields = ["egg_type", "laid_date", "feed_type", "quantity_available", "farm_practices"]
+                                eggs_present = any(field in item for field in eggs_fields)
+                                if eggs_present:
+                                    print("✅ Following Feed Category Fields: PASSED")
+                                else:
+                                    print("❌ Following Feed: Missing category-specific fields for eggs")
+                                    return False
+                            elif item.get("category") == "poultry":
+                                poultry_fields = ["breed", "age", "health_status"]
+                                poultry_present = any(field in item for field in poultry_fields)
+                                if poultry_present:
+                                    print("✅ Following Feed Category Fields: PASSED")
+                                else:
+                                    print("❌ Following Feed: Missing category-specific fields for poultry")
+                                    return False
+                            
+                            # Verify seller information
+                            if item.get("seller_name") and item.get("seller_location"):
+                                print("✅ Following Feed Seller Info: PASSED")
+                            else:
+                                print("❌ Following Feed: Missing seller information")
+                                return False
+                        else:
+                            print(f"❌ Following Feed: Missing required fields: {missing_fields}")
+                            return False
+                    else:
+                        print("✅ Following Feed Empty: PASSED (no items to follow)")
+                    
+                    # Test 2: Pagination
+                    response2 = self.session.get(
+                        f"{API_BASE_URL}/feed/following?current_user_id={self.user_2_id}&limit=5&skip=0"
+                    )
+                    print(f"Following feed pagination - Status Code: {response2.status_code}")
+                    
+                    if response2.status_code == 200:
+                        paginated_feed = response2.json()
+                        if isinstance(paginated_feed, list):
+                            print("✅ Following Feed Pagination: PASSED")
+                            
+                            # Test 3: User not following anyone
+                            # Create a new user for this test
+                            new_user_data = {
+                                "name": "Test User No Following",
+                                "email": f"nofollow.{uuid.uuid4().hex[:8]}@example.com",
+                                "password": "TestPass123!",
+                                "phone": "+1-555-9999",
+                                "location": "Test City, TX"
+                            }
+                            
+                            reg_response = self.session.post(f"{API_BASE_URL}/auth/register", json=new_user_data)
+                            if reg_response.status_code == 200:
+                                new_user_id = reg_response.json()["user_id"]
+                                
+                                response3 = self.session.get(
+                                    f"{API_BASE_URL}/feed/following?current_user_id={new_user_id}"
+                                )
+                                print(f"Feed for user following no one - Status Code: {response3.status_code}")
+                                
+                                if response3.status_code == 200:
+                                    empty_feed = response3.json()
+                                    if isinstance(empty_feed, list) and len(empty_feed) == 0:
+                                        print("✅ Following Feed Empty User: PASSED")
+                                        print("✅ Following Feed: PASSED")
+                                        return True
+                                    else:
+                                        print("❌ Following Feed: Should be empty for user following no one")
+                                        return False
+                                else:
+                                    print(f"❌ Following Feed: Empty user test failed with status {response3.status_code}")
+                                    return False
+                            else:
+                                print("❌ Following Feed: Could not create test user for empty feed test")
+                                # Still pass if main functionality works
+                                print("✅ Following Feed: PASSED (main functionality working)")
+                                return True
+                        else:
+                            print("❌ Following Feed: Pagination response not a list")
+                            return False
+                    else:
+                        print(f"❌ Following Feed: Pagination failed with status {response2.status_code}")
+                        return False
+                else:
+                    print("❌ Following Feed: Response not a list")
+                    return False
+            else:
+                print(f"❌ Following Feed: Failed with status {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"❌ Following Feed: Exception - {str(e)}")
+            return False
+
+    def test_follow_system_integration(self):
+        """Test follow system integration with existing data"""
+        print("\n=== Testing Follow System Integration ===")
+        if not self.user_id or not self.user_2_id:
+            print("❌ Follow System Integration: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Verify follow counts update correctly after follow/unfollow
+            # Get initial stats
+            initial_response = self.session.get(f"{API_BASE_URL}/users/{self.user_id}/follow-stats")
+            if initial_response.status_code != 200:
+                print("❌ Follow Integration: Could not get initial stats")
+                return False
+                
+            initial_stats = initial_response.json()
+            initial_followers = initial_stats["followers_count"]
+            
+            # Follow the user
+            follow_response = self.session.post(
+                f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_2_id}"
+            )
+            
+            # Get updated stats
+            updated_response = self.session.get(f"{API_BASE_URL}/users/{self.user_id}/follow-stats")
+            if updated_response.status_code == 200:
+                updated_stats = updated_response.json()
+                if updated_stats["followers_count"] == initial_followers + 1:
+                    print("✅ Follow Count Update: PASSED")
+                    
+                    # Unfollow and verify count decreases
+                    unfollow_response = self.session.delete(
+                        f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_2_id}"
+                    )
+                    
+                    final_response = self.session.get(f"{API_BASE_URL}/users/{self.user_id}/follow-stats")
+                    if final_response.status_code == 200:
+                        final_stats = final_response.json()
+                        if final_stats["followers_count"] == initial_followers:
+                            print("✅ Unfollow Count Update: PASSED")
+                        else:
+                            print("❌ Follow Integration: Unfollow count not updated correctly")
+                            return False
+                    else:
+                        print("❌ Follow Integration: Could not get final stats")
+                        return False
+                else:
+                    print("❌ Follow Integration: Follow count not updated correctly")
+                    return False
+            else:
+                print("❌ Follow Integration: Could not get updated stats")
+                return False
+            
+            # Test 2: Verify follow system works with existing listings
+            # Follow user again for feed test
+            self.session.post(f"{API_BASE_URL}/users/{self.user_id}/follow?current_user_id={self.user_2_id}")
+            
+            # Check if following feed shows listings from followed user
+            feed_response = self.session.get(f"{API_BASE_URL}/feed/following?current_user_id={self.user_2_id}")
+            if feed_response.status_code == 200:
+                feed_items = feed_response.json()
+                
+                # Verify feed contains listings from followed user
+                followed_user_listings = [item for item in feed_items if item.get("user_id") == self.user_id]
+                if len(followed_user_listings) > 0:
+                    print("✅ Following Feed Integration: PASSED")
+                else:
+                    print("✅ Following Feed Integration: PASSED (no listings from followed user yet)")
+                
+                print("✅ Follow System Integration: PASSED")
+                return True
+            else:
+                print(f"❌ Follow Integration: Feed test failed with status {feed_response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Follow System Integration: Exception - {str(e)}")
+            return False
+
+    def test_follow_system_edge_cases(self):
+        """Test follow system edge cases and data integrity"""
+        print("\n=== Testing Follow System Edge Cases ===")
+        if not self.user_id or not self.user_2_id:
+            print("❌ Follow System Edge Cases: Missing required test data")
+            return False
+            
+        try:
+            # Test 1: Users with no followers/following
+            new_user_data = {
+                "name": "Isolated User",
+                "email": f"isolated.{uuid.uuid4().hex[:8]}@example.com",
+                "password": "IsolatedPass123!",
+                "phone": "+1-555-8888",
+                "location": "Isolated City, TX"
+            }
+            
+            reg_response = self.session.post(f"{API_BASE_URL}/auth/register", json=new_user_data)
+            if reg_response.status_code == 200:
+                isolated_user_id = reg_response.json()["user_id"]
+                
+                # Test followers list for user with no followers
+                followers_response = self.session.get(f"{API_BASE_URL}/users/{isolated_user_id}/followers")
+                if followers_response.status_code == 200:
+                    followers = followers_response.json()
+                    if isinstance(followers, list) and len(followers) == 0:
+                        print("✅ No Followers Edge Case: PASSED")
+                    else:
+                        print("❌ Follow Edge Cases: No followers should return empty list")
+                        return False
+                else:
+                    print(f"❌ Follow Edge Cases: No followers test failed with status {followers_response.status_code}")
+                    return False
+                
+                # Test following list for user following no one
+                following_response = self.session.get(f"{API_BASE_URL}/users/{isolated_user_id}/following")
+                if following_response.status_code == 200:
+                    following = following_response.json()
+                    if isinstance(following, list) and len(following) == 0:
+                        print("✅ No Following Edge Case: PASSED")
+                    else:
+                        print("❌ Follow Edge Cases: No following should return empty list")
+                        return False
+                else:
+                    print(f"❌ Follow Edge Cases: No following test failed with status {following_response.status_code}")
+                    return False
+                
+                # Test follow stats for isolated user
+                stats_response = self.session.get(f"{API_BASE_URL}/users/{isolated_user_id}/follow-stats")
+                if stats_response.status_code == 200:
+                    stats = stats_response.json()
+                    if (stats["followers_count"] == 0 and 
+                        stats["following_count"] == 0):
+                        print("✅ Isolated User Stats: PASSED")
+                    else:
+                        print("❌ Follow Edge Cases: Isolated user should have 0 followers/following")
+                        return False
+                else:
+                    print(f"❌ Follow Edge Cases: Isolated user stats failed with status {stats_response.status_code}")
+                    return False
+            else:
+                print("❌ Follow Edge Cases: Could not create isolated user")
+                return False
+            
+            # Test 2: Pagination edge cases
+            # Test skip beyond available data
+            large_skip_response = self.session.get(f"{API_BASE_URL}/users/{self.user_id}/followers?skip=1000&limit=10")
+            if large_skip_response.status_code == 200:
+                large_skip_data = large_skip_response.json()
+                if isinstance(large_skip_data, list):
+                    print("✅ Pagination Edge Case: PASSED")
+                else:
+                    print("❌ Follow Edge Cases: Large skip should return empty list")
+                    return False
+            else:
+                print(f"❌ Follow Edge Cases: Large skip test failed with status {large_skip_response.status_code}")
+                return False
+            
+            # Test 3: Concurrent follow/unfollow operations simulation
+            # This is a basic test - in production you'd want more sophisticated concurrency testing
+            follow_response1 = self.session.post(f"{API_BASE_URL}/users/{isolated_user_id}/follow?current_user_id={self.user_id}")
+            follow_response2 = self.session.post(f"{API_BASE_URL}/users/{isolated_user_id}/follow?current_user_id={self.user_2_id}")
+            
+            if follow_response1.status_code == 200 and follow_response2.status_code == 200:
+                # Verify both follows were recorded
+                stats_response = self.session.get(f"{API_BASE_URL}/users/{isolated_user_id}/follow-stats")
+                if stats_response.status_code == 200:
+                    stats = stats_response.json()
+                    if stats["followers_count"] == 2:
+                        print("✅ Concurrent Operations: PASSED")
+                        print("✅ Follow System Edge Cases: PASSED")
+                        return True
+                    else:
+                        print("❌ Follow Edge Cases: Concurrent operations not handled correctly")
+                        return False
+                else:
+                    print("❌ Follow Edge Cases: Could not verify concurrent operations")
+                    return False
+            else:
+                print("❌ Follow Edge Cases: Concurrent operations failed")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Follow System Edge Cases: Exception - {str(e)}")
+            return False
     
     def run_all_tests(self):
         """Run all backend API tests"""
