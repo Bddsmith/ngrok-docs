@@ -394,6 +394,13 @@ const ListingDetail = () => {
                         <i className="fas fa-phone"></i>
                         Call
                       </a>
+                      <button 
+                        onClick={handleRateSeller}
+                        className="btn btn-secondary rate-btn"
+                      >
+                        <i className="fas fa-star"></i>
+                        Rate Seller
+                      </button>
                     </div>
                   )}
                 </div>
