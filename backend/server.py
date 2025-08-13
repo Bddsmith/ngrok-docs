@@ -362,7 +362,7 @@ async def get_user_conversations(user_id: str):
             listing_title=listing["title"] if listing else "Unknown Listing",
             other_user_name=other_user["name"] if other_user else "Unknown User",
             last_message=conv_data["last_message"],
-            last_message_time=conv_data["last_message_time"],
+            last_message_time=conv_data["last_message_time"] or datetime.utcnow(),
             unread_count=unread_count
         ))
     
