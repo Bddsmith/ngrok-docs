@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { listingsAPI, userAPI } from '../services/api';
 import { RatingDisplay, RatingForm, RatingsList } from '../components/RatingSystem';
 import { FollowButton } from '../components/FollowSystem';
+import FlagButton from '../components/FlagButton';
 import './ListingDetail.css';
 
 const ListingDetail = () => {
