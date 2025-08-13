@@ -237,6 +237,51 @@ const ListingDetail = () => {
                       <span className="detail-value">{listing.condition}</span>
                     </div>
                   )}
+
+                  {/* Eggs-specific fields */}
+                  {listing.egg_type && (
+                    <div className="detail-item">
+                      <i className="fas fa-egg"></i>
+                      <span className="detail-label">Egg Type:</span>
+                      <span className="detail-value">{listing.egg_type}</span>
+                    </div>
+                  )}
+
+                  {listing.laid_date && (
+                    <div className="detail-item freshness-highlight">
+                      <i className="fas fa-calendar-day"></i>
+                      <span className="detail-label">Collection Date:</span>
+                      <span className="detail-value">{formatDate(listing.laid_date)} 
+                        <span className="freshness-indicator">
+                          ({calculateFreshness(listing.laid_date)})
+                        </span>
+                      </span>
+                    </div>
+                  )}
+
+                  {listing.feed_type && (
+                    <div className="detail-item health-highlight">
+                      <i className="fas fa-seedling"></i>
+                      <span className="detail-label">Feed Type:</span>
+                      <span className="detail-value">{listing.feed_type}</span>
+                    </div>
+                  )}
+
+                  {listing.quantity_available && (
+                    <div className="detail-item">
+                      <i className="fas fa-weight"></i>
+                      <span className="detail-label">Quantity:</span>
+                      <span className="detail-value">{listing.quantity_available}</span>
+                    </div>
+                  )}
+
+                  {listing.farm_practices && (
+                    <div className="detail-item certification-highlight">
+                      <i className="fas fa-certificate"></i>
+                      <span className="detail-label">Farm Practices:</span>
+                      <span className="detail-value">{listing.farm_practices}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
