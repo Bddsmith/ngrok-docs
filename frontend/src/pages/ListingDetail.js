@@ -411,6 +411,13 @@ const ListingDetail = () => {
                         <i className="fas fa-star"></i>
                         Rate Seller
                       </button>
+                      <FlagButton 
+                        listingId={id}
+                        onFlagged={() => {
+                          // Optional: Show success message or refresh data
+                          console.log('Listing flagged successfully');
+                        }}
+                      />
                     </div>
                   )}
                 </div>
