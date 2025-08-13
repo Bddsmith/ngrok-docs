@@ -106,6 +106,12 @@ class ListingCreate(BaseModel):
     size: Optional[str] = None
     material: Optional[str] = None
     condition: Optional[str] = None
+    # Eggs specific fields
+    egg_type: Optional[str] = None
+    laid_date: Optional[str] = None
+    feed_type: Optional[str] = None
+    quantity_available: Optional[str] = None
+    farm_practices: Optional[str] = None
 
 class Message(BaseModel):
     id: Optional[str] = Field(default=None, alias="_id")
