@@ -68,7 +68,7 @@ class Listing(BaseModel):
     user_id: str
     title: str
     description: str
-    category: str  # "poultry", "coop", "cage"
+    category: str  # "poultry", "coop", "cage", "eggs"
     price: float
     images: List[str] = []  # base64 encoded images
     location: str
@@ -80,6 +80,12 @@ class Listing(BaseModel):
     size: Optional[str] = None
     material: Optional[str] = None
     condition: Optional[str] = None
+    # Eggs specific fields
+    egg_type: Optional[str] = None  # "chicken", "duck", "quail", etc.
+    laid_date: Optional[str] = None  # when eggs were collected
+    feed_type: Optional[str] = None  # "organic", "free-range", "pasture-raised", etc.
+    quantity_available: Optional[str] = None  # "12 dozen", "2 dozen", etc.
+    farm_practices: Optional[str] = None  # "cage-free", "organic certified", etc.
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
