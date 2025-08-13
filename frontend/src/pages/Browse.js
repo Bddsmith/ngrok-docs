@@ -193,6 +193,12 @@ const Browse = () => {
                 totalRatings={sellerRatings[listing.user_id].total_ratings}
               />
             )}
+            <div className="listing-follow-btn">
+              <FollowButton 
+                userId={listing.user_id}
+                userName="Seller"
+              />
+            </div>
           </div>
         </div>
       </div>
