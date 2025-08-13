@@ -204,6 +204,105 @@ const CreateListing = () => {
           </div>
         </div>
       );
+    } else if (formData.category === 'eggs') {
+      return (
+        <div className="category-fields">
+          <h3 className="section-title">Fresh Eggs Details</h3>
+          <div className="health-focus-banner">
+            <i className="fas fa-heart"></i>
+            <span>Focus on freshness and health benefits to attract health-conscious buyers</span>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-egg"></i>
+                Egg Type *
+              </label>
+              <select
+                name="egg_type"
+                className="form-select"
+                value={formData.egg_type}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select egg type</option>
+                <option value="Chicken">Chicken Eggs</option>
+                <option value="Duck">Duck Eggs</option>
+                <option value="Quail">Quail Eggs</option>
+                <option value="Goose">Goose Eggs</option>
+                <option value="Turkey">Turkey Eggs</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-calendar-day"></i>
+                Collection Date *
+              </label>
+              <input
+                type="date"
+                name="laid_date"
+                className="form-input"
+                value={formData.laid_date}
+                onChange={handleInputChange}
+                max={new Date().toISOString().split('T')[0]}
+                required
+              />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-seedling"></i>
+                Feed Type *
+              </label>
+              <select
+                name="feed_type"
+                className="form-select"
+                value={formData.feed_type}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select feed type</option>
+                <option value="Organic Certified">Organic Certified</option>
+                <option value="Pasture-Raised">Pasture-Raised</option>
+                <option value="Free-Range">Free-Range</option>
+                <option value="Cage-Free">Cage-Free</option>
+                <option value="Natural Non-GMO">Natural Non-GMO</option>
+                <option value="Vegetarian Fed">Vegetarian Fed</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                <i className="fas fa-weight"></i>
+                Quantity Available *
+              </label>
+              <input
+                type="text"
+                name="quantity_available"
+                className="form-input"
+                placeholder="e.g., 2 dozen, 24 eggs, 5 dozen"
+                value={formData.quantity_available}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">
+              <i className="fas fa-certificate"></i>
+              Farm Practices & Certifications
+            </label>
+            <input
+              type="text"
+              name="farm_practices"
+              className="form-input"
+              placeholder="e.g., USDA Organic, Humane Certified, Local Family Farm"
+              value={formData.farm_practices}
+              onChange={handleInputChange}
+            />
+          </div>
+        </div>
+      );
     } else {
       return (
         <div className="category-fields">
