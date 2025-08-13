@@ -237,8 +237,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Follow System Backend"
-  stuck_tasks: []
+    - "Follow System Frontend"
+  stuck_tasks:
+    - "Follow System Frontend"
   test_all: false
   test_priority: "high_first"
 
