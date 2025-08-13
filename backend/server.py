@@ -415,6 +415,7 @@ async def get_admin_stats():
     poultry_count = await db.listings.count_documents({"category": "poultry", "is_active": True})
     coop_count = await db.listings.count_documents({"category": "coop", "is_active": True})
     cage_count = await db.listings.count_documents({"category": "cage", "is_active": True})
+    eggs_count = await db.listings.count_documents({"category": "eggs", "is_active": True})
     
     return {
         "total_users": total_users,
@@ -424,7 +425,8 @@ async def get_admin_stats():
         "listings_by_category": {
             "poultry": poultry_count,
             "coop": coop_count,
-            "cage": cage_count
+            "cage": cage_count,
+            "eggs": eggs_count
         }
     }
 
