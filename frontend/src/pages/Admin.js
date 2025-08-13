@@ -4,11 +4,31 @@ import { useAdminAuth, getAdminUsername } from '../hooks/useAdminAuth';
 import './Admin.css';
 
 const Admin = () => {
+  const { isAuthenticated, loading: authLoading, logout } = useAdminAuth();
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className="admin-page">
+        <div className="container">
+          <div className="loading-section">
+            <div className="spinner"></div>
+            <p>Verifying admin access...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, the useAdminAuth hook will redirect to login
+  if (!isAuthenticated) {
+    return null;
+  }
 
   useEffect(() => {
     loadAdminData();
