@@ -1083,7 +1083,9 @@ async def admin_listing_action(listing_id: str, action_data: AdminActionCreate, 
         "title": f"Action Completed: {action_data.action.title()}",
         "message": f"Listing '{listing['title'][:30]}...' has been {action_data.action}d",
         "related_id": listing_id,
-        "priority": "normal"
+        "priority": "normal",
+        "read": False,
+        "created_at": datetime.utcnow()
     }
     await db.admin_notifications.insert_one(notification_data)
     
