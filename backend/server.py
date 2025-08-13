@@ -241,6 +241,7 @@ async def create_listing(listing_data: ListingCreate, user_id: str):
     # In a real app, you'd extract user_id from JWT token
     listing_dict = listing_data.dict()
     listing_dict['user_id'] = user_id
+    listing_dict['is_active'] = True  # Ensure is_active is set
     
     result = await db.listings.insert_one(listing_dict)
     
