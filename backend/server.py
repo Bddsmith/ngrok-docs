@@ -243,8 +243,8 @@ async def login_user(login_data: UserLogin):
         "user_id": str(user['_id'])
     }
 
-# User Profile
-@api_router.get("/users/{user_id}", response_model=User)
+# User Profile with Rating Info
+@api_router.get("/users/{user_id}", response_model=dict)
 async def get_user_profile(user_id: str):
     try:
         user = await db.users.find_one({"_id": ObjectId(user_id)})
@@ -254,6 +254,30 @@ async def get_user_profile(user_id: str):
         user = serialize_object_id(user)
         # Remove password from response
         user.pop('password', None)
+        
+        # Add rating information if user is a seller
+        rating_summary_pipeline = [
+            {"$match": {"seller_id": user_id}},
+            {"$group": {
+                "_id": None,
+                "average_rating": {"$avg": "$rating"},
+                "total_ratings": {"$sum": 1}
+            }}
+        ]
+        
+        rating_result = await db.ratings.aggregate(rating_summary_pipeline).to_list(length=1)
+        
+        if rating_result:
+            user["seller_rating"] = {
+                "average_rating": round(rating_result[0]["average_rating"], 1),
+                "total_ratings": rating_result[0]["total_ratings"]
+            }
+        else:
+            user["seller_rating"] = {
+                "average_rating": 0.0,
+                "total_ratings": 0
+            }
+        
         return user
     except Exception as e:
         raise HTTPException(status_code=404, detail="User not found")
