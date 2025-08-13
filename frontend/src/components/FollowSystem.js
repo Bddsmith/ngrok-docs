@@ -67,7 +67,7 @@ const FollowButton = ({ userId, userName, initialFollowState = null, onFollowCha
   };
 
   // Don't show follow button for own profile
-  if (!user || userId === user.id) {
+  if (userId === user?.id) {
     return null;
   }
 
