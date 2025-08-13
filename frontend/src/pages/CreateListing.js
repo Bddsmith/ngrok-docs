@@ -36,6 +36,7 @@ const CreateListing = () => {
 
   const categories = [
     { key: 'poultry', label: 'Poultry', icon: 'fas fa-dove' },
+    { key: 'eggs', label: 'Fresh Local Eggs', icon: 'fas fa-egg' },
     { key: 'coop', label: 'Coop', icon: 'fas fa-home' },
     { key: 'cage', label: 'Cage', icon: 'fas fa-square' },
   ];
