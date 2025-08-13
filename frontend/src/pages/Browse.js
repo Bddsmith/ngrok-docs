@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { listingsAPI } from '../services/api';
 import AdvancedSearch from '../components/AdvancedSearch';
 import { RatingDisplay } from '../components/RatingSystem';
