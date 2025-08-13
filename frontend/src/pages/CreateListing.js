@@ -22,6 +22,12 @@ const CreateListing = () => {
     size: '',
     material: '',
     condition: '',
+    // Eggs fields
+    egg_type: '',
+    laid_date: '',
+    feed_type: '',
+    quantity_available: '',
+    farm_practices: '',
   });
   
   const [images, setImages] = useState([]);
