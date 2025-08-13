@@ -225,11 +225,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin API Endpoints"
-    - "Admin Dashboard Frontend"
-    - "Admin Route Configuration"
-    - "Admin Navigation Link"
-    - "Eggs Category Backend Support"
+    - "Advanced Search System"
+    - "Rating System"
+    - "Enhanced User Profile with Ratings"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
