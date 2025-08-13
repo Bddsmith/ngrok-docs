@@ -202,6 +202,59 @@ class Conversation(BaseModel):
     last_message_time: datetime
     unread_count: int
 
+# === Admin Models ===
+
+class ListingFlag(BaseModel):
+    id: Optional[str] = Field(default=None, alias="_id")
+    listing_id: str
+    flagger_id: str  # User who flagged the listing
+    reason: str  # "suspicious", "scam", "inappropriate", "fake", "other"
+    description: Optional[str] = None  # Additional details
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    reviewed: bool = False  # Whether admin has reviewed this flag
+    reviewed_by: Optional[str] = None  # Admin user ID
+    reviewed_at: Optional[datetime] = None
+    action_taken: Optional[str] = None  # "removed", "cleared", "warned"
+    
+    class Config:
+        populate_by_name = True
+
+class FlagCreate(BaseModel):
+    listing_id: str
+    reason: str
+    description: Optional[str] = None
+
+class AdminListingAction(BaseModel):
+    id: Optional[str] = Field(default=None, alias="_id")
+    listing_id: str
+    admin_id: str
+    action: str  # "deactivate", "reactivate", "delete", "clear_flags"
+    reason: str
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
+
+class AdminActionCreate(BaseModel):
+    listing_id: str
+    action: str
+    reason: str
+    notes: Optional[str] = None
+
+class AdminNotification(BaseModel):
+    id: Optional[str] = Field(default=None, alias="_id")
+    type: str  # "flagged_listing", "suspicious_activity", "user_report"
+    title: str
+    message: str
+    related_id: Optional[str] = None  # listing_id, user_id, etc.
+    priority: str = "normal"  # "low", "normal", "high", "urgent"
+    read: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
+
 # === Authentication Helpers ===
 
 def hash_password(password: str) -> str:
