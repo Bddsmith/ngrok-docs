@@ -96,7 +96,21 @@ const Register = () => {
     if (result.success) {
       navigate('/');
     } else {
-      setError(result.error);
+      // More specific error messages
+      let errorMessage = result.error;
+      
+      // Check for common API error messages and make them user-friendly
+      if (errorMessage.includes('already registered')) {
+        errorMessage = 'This email is already registered. Please use a different email or try logging in.';
+      } else if (errorMessage.includes('validation')) {
+        errorMessage = 'Please check that all fields are filled correctly and password requirements are met.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('failed to fetch')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (errorMessage === 'Registration failed') {
+        errorMessage = 'Registration failed. Please ensure your password meets all requirements and try again.';
+      }
+      
+      setError(errorMessage);
     }
     
     setIsLoading(false);
