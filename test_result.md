@@ -193,6 +193,7 @@ test_plan:
     - "Admin Dashboard Frontend"
     - "Admin Route Configuration"
     - "Admin Navigation Link"
+    - "Eggs Category Backend Support"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
