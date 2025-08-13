@@ -1049,7 +1049,11 @@ async def admin_listing_action(listing_id: str, action_data: AdminActionCreate, 
     """Perform admin action on a listing"""
     
     # Check if listing exists
-    listing = await db.listings.find_one({"_id": ObjectId(listing_id)})
+    try:
+        listing = await db.listings.find_one({"_id": ObjectId(listing_id)})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
     
