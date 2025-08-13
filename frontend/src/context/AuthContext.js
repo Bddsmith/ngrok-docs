@@ -70,12 +70,13 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('/api/auth/register', userData);
+      const backendURL = process.env.REACT_APP_BACKEND_URL || '';
+      const response = await axios.post(`${backendURL}/api/auth/register`, userData);
 
       const { token: authToken, user_id } = response.data;
 
       // Get user details
-      const userResponse = await axios.get(`/api/users/${user_id}`);
+      const userResponse = await axios.get(`${backendURL}/api/users/${user_id}`);
       const newUserData = userResponse.data;
 
       // Save to storage
