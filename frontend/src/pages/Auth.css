@@ -242,6 +242,134 @@
   border-color: #32cd32;
 }
 
+/* Password Requirements Styling */
+.password-requirements {
+  margin-top: 15px;
+  padding: 20px;
+  background: rgba(245, 245, 220, 0.3);
+  border: 2px solid #d2b48c;
+  border-radius: 15px;
+  border-left: 5px solid #d2691e;
+}
+
+.requirements-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #2c1810;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+}
+
+.requirements-header i {
+  color: #d2691e;
+  font-size: 16px;
+}
+
+.requirements-list {
+  display: grid;
+  gap: 8px;
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.requirement.met {
+  background: rgba(50, 205, 50, 0.1);
+  color: #006400;
+  border: 1px solid rgba(50, 205, 50, 0.3);
+}
+
+.requirement.met i {
+  color: #32cd32;
+}
+
+.requirement.unmet {
+  background: rgba(220, 20, 60, 0.1);
+  color: #8b0000;
+  border: 1px solid rgba(220, 20, 60, 0.3);
+}
+
+.requirement.unmet i {
+  color: #dc143c;
+}
+
+.requirement i {
+  font-size: 12px;
+  width: 12px;
+  text-align: center;
+}
+
+/* Password Input Group */
+.password-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-group .form-input {
+  padding-right: 50px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 15px;
+  background: none;
+  border: none;
+  color: #8b4513;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.password-toggle:hover {
+  background: rgba(139, 69, 19, 0.1);
+  color: #d2691e;
+}
+
+/* Responsive Design for Password Requirements */
+@media (max-width: 768px) {
+  .password-requirements {
+    padding: 15px;
+  }
+  
+  .requirements-header {
+    font-size: 13px;
+  }
+  
+  .requirement {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .password-requirements {
+    padding: 12px;
+  }
+  
+  .requirements-list {
+    gap: 6px;
+  }
+  
+  .requirement {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .auth-page {
