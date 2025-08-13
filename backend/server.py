@@ -354,7 +354,7 @@ async def get_user_conversations(user_id: str):
         
         # Count unread messages
         unread_count = len([msg for msg in conv_data["messages"] 
-                           if msg["receiver_id"] == user_id and not msg["read"]])
+                           if msg["receiver_id"] == user_id and not msg.get("read", False)])
         
         conversations.append(Conversation(
             id=f"{conv_data['_id']['listing_id']}_{conv_data['_id']['other_user']}",
