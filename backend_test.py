@@ -1994,6 +1994,14 @@ class PoultryAPITester:
         test_results['follow_system_integration'] = self.test_follow_system_integration()
         test_results['follow_system_edge_cases'] = self.test_follow_system_edge_cases()
         
+        # Admin Listing Management System tests
+        test_results['flag_listing_functionality'] = self.test_flag_listing_functionality()
+        test_results['admin_notifications_system'] = self.test_admin_notifications_system()
+        test_results['admin_listings_management'] = self.test_admin_listings_management()
+        test_results['admin_listing_actions'] = self.test_admin_listing_actions()
+        test_results['admin_flags_summary'] = self.test_admin_flags_summary()
+        test_results['updated_admin_stats'] = self.test_updated_admin_stats()
+        
         # Print summary
         print("\n" + "=" * 60)
         print("🏁 TEST SUMMARY")
