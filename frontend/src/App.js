@@ -12,6 +12,7 @@ import Messages from './pages/Messages';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import AdminLogin from './pages/AdminLogin';
 import './App.css';
 
 function App() {
