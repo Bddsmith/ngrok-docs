@@ -175,13 +175,24 @@ const Browse = () => {
         </div>
         
         <div className="listing-footer">
-          <span className="listing-location">
-            <i className="fas fa-map-marker-alt"></i>
-            {listing.location}
-          </span>
-          <span className="listing-date">
-            {formatDate(listing.created_at)}
-          </span>
+          <div className="listing-info-left">
+            <span className="listing-location">
+              <i className="fas fa-map-marker-alt"></i>
+              {listing.location}
+            </span>
+            <span className="listing-date">
+              {formatDate(listing.created_at)}
+            </span>
+          </div>
+          
+          <div className="listing-seller-rating">
+            {sellerRatings[listing.user_id] && (
+              <RatingDisplay 
+                averageRating={sellerRatings[listing.user_id].average_rating}
+                totalRatings={sellerRatings[listing.user_id].total_ratings}
+              />
+            )}
+          </div>
         </div>
       </div>
     </Link>
