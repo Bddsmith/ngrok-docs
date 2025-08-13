@@ -773,9 +773,12 @@ async def get_following_feed(current_user_id: str, limit: int = 20, skip: int = 
         }},
         {"$unwind": "$listings"},
         {"$match": {"listings.is_active": True}},
+        {"$addFields": {
+            "following_object_id": {"$toObjectId": "$following_id"}
+        }},
         {"$lookup": {
             "from": "users",
-            "localField": "following_id",
+            "localField": "following_object_id",
             "foreignField": "_id",
             "as": "seller_info"
         }},
