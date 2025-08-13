@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { listingsAPI } from '../services/api';
 import AdvancedSearch from '../components/AdvancedSearch';
 import { RatingDisplay } from '../components/RatingSystem';
+import { FollowButton } from '../components/FollowSystem';
 import './Browse.css';
 
 const Browse = () => {
