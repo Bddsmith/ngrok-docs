@@ -65,9 +65,32 @@ const ListingDetail = () => {
       return;
     }
 
-    if (!listing || !seller) return;
+    navigate(`/chat/${listing.id}/${listing.user_id}`);
+  };
 
-    navigate(`/chat/${listing.id || listing._id}/${seller.id || seller._id}`);
+  const handleRateSeller = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (user.id === listing.user_id) {
+      alert('You cannot rate your own listing');
+      return;
+    }
+
+    setShowRatingForm(true);
+  };
+
+  const handleRatingSubmitted = (newRating) => {
+    setShowRatingForm(false);
+    // Reload seller rating to show updated info
+    loadSellerRating();
+    alert('Thank you for your rating!');
+  };
+
+  const handleRatingFormCancel = () => {
+    setShowRatingForm(false);
   };
 
   const formatDate = (dateString) => {
