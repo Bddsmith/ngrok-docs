@@ -625,8 +625,11 @@ async def follow_user(user_id: str, current_user_id: str):
         raise HTTPException(status_code=400, detail="You cannot follow yourself")
     
     # Check if user exists
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
-    if not user:
+    try:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception:
         raise HTTPException(status_code=404, detail="User not found")
     
     # Check if already following
