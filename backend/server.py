@@ -914,7 +914,11 @@ async def get_admin_stats():
 async def flag_listing(listing_id: str, flag_data: FlagCreate, current_user_id: str):
     """Allow users to flag suspicious/inappropriate listings"""
     # Check if listing exists
-    listing = await db.listings.find_one({"_id": ObjectId(listing_id)})
+    try:
+        listing = await db.listings.find_one({"_id": ObjectId(listing_id)})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
     
