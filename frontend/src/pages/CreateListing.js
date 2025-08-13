@@ -131,6 +131,12 @@ const CreateListing = () => {
         if (formData.breed) listingData.breed = formData.breed.trim();
         if (formData.age) listingData.age = formData.age.trim();
         if (formData.health_status) listingData.health_status = formData.health_status.trim();
+      } else if (formData.category === 'eggs') {
+        if (formData.egg_type) listingData.egg_type = formData.egg_type.trim();
+        if (formData.laid_date) listingData.laid_date = formData.laid_date.trim();
+        if (formData.feed_type) listingData.feed_type = formData.feed_type.trim();
+        if (formData.quantity_available) listingData.quantity_available = formData.quantity_available.trim();
+        if (formData.farm_practices) listingData.farm_practices = formData.farm_practices.trim();
       } else {
         if (formData.size) listingData.size = formData.size.trim();
         if (formData.material) listingData.material = formData.material.trim();
