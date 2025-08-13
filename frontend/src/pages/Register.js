@@ -40,8 +40,24 @@ const Register = () => {
       return false;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    // Enhanced password validation
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return false;
+    }
+
+    if (!/(?=.*[a-z])/.test(formData.password)) {
+      setError('Password must contain at least one lowercase letter');
+      return false;
+    }
+
+    if (!/(?=.*[A-Z])/.test(formData.password)) {
+      setError('Password must contain at least one uppercase letter');
+      return false;
+    }
+
+    if (!/(?=.*\d)/.test(formData.password)) {
+      setError('Password must contain at least one number');
       return false;
     }
 
@@ -52,6 +68,18 @@ const Register = () => {
     }
 
     return true;
+  };
+
+  // Password strength checker
+  const getPasswordStrength = (password) => {
+    const requirements = [
+      { test: password.length >= 8, text: 'At least 8 characters' },
+      { test: /(?=.*[a-z])/.test(password), text: 'One lowercase letter' },
+      { test: /(?=.*[A-Z])/.test(password), text: 'One uppercase letter' },
+      { test: /(?=.*\d)/.test(password), text: 'One number' }
+    ];
+    
+    return requirements;
   };
 
   const handleSubmit = async (e) => {
