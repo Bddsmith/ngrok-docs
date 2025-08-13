@@ -220,7 +220,6 @@ class ListingFlag(BaseModel):
         populate_by_name = True
 
 class FlagCreate(BaseModel):
-    listing_id: str
     reason: str
     description: Optional[str] = None
 
